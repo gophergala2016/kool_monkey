@@ -56,6 +56,9 @@ postgresql-stop:
 kool-server: deps
 	GOPATH=${PROJECT} go install kool-server
 
+kool-agent: deps
+	GOPATH=${PROJECT} go install kool-agent
+
 deps: ${GODEPS}
 github.com/% :
 	GOPATH=${PROJECT} go get $@
