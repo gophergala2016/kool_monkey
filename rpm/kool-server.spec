@@ -53,8 +53,15 @@ fi
 
 %post
 /sbin/chkconfig --add kool-server
-su postgres -c "/usr/bin/createdb monkey"
-su postgres -c "/usr/bin/psql monkey -f %{_datadir}/create_db.sql"
+if [ -z `su postgres -c "/usr/bin/psql -l | grep monkey"` ]; then
+	su postgres -c "/usr/bin/createdb monkey"
+	su postgres -c "/usr/bin/psql monkey -f %{_datadir}/create_db.sql"
+else
+	su postgres -c "/usr/bin/psql monkey -f %{_datadir}/upgrade_db.sql"
+fi
+
+%postun
+su postgres -c "/usr/bin/dropdb --if-exists monkey"
 
 %clean
 %{__rm} -rf %{buildroot}
@@ -63,6 +70,7 @@ su postgres -c "/usr/bin/psql monkey -f %{_datadir}/create_db.sql"
 %defattr(-, root, root, 0755)
 %{_bindir}/kool-server
 %{_datadir}/create_db.sql
+%{_datadir}/upgrade_db.sql
 %{_datadir}/create_roles.sql
 %{_datadir}/create_schema.sql
 %{_sysconfdir}/init.d/kool-server
