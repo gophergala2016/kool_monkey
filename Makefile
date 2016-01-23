@@ -3,6 +3,10 @@ TOPDIR?=$(realpath .)
 include $(TOPDIR)/Config.mk
 
 DIRS=conf
+GODEPS=\
+	github.com/lib/pq \
+	github.com/gorilla/mux \
+	github.com/codegangsta/negroni
 
 all:
 	@$(MAKE) kool-server
@@ -49,8 +53,12 @@ postgresql-stop:
 		while kill -INT `cat $(RUN_DIR)/postmaster.pid` 2>/dev/null; do echo -n "\\033[1;35m.\\033[39;0m "; sleep 1; done; echo; \
 	fi
 
-kool-server:
+kool-server: deps
 	GOPATH=${PROJECT} go install kool-server
+
+deps: ${GODEPS}
+github.com/% :
+	GOPATH=${PROJECT} go get $@
 
 help:
 	@echo "\033[1;35mmake all\\033[39;0m - build, install and bring up the regress environment."
