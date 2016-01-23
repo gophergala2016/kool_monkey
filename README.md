@@ -65,9 +65,7 @@ build the rpms and deploy into production both the server part
 (metrics recolection and web frontend) and the agents, so it's become
 quite easy to build and deploy the project.
 
-The current status of travis are:
-
-[![Build Status](https://travis-ci.org/ivan-californias/kool_monkey.svg?branch=master)](https://travis-ci.org/ivan-californias/kool_monkey)
+The current status of travis is [![Build Status](https://travis-ci.org/ivan-californias/kool_monkey.svg?branch=master)](https://travis-ci.org/ivan-californias/kool_monkey)
 
 ## Developers
 
