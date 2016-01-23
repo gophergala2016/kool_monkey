@@ -1,7 +1,9 @@
 language: go
 before_install: openssl aes-256-cbc -K $encrypted_6205dd6727af_key -iv $encrypted_6205dd6727af_iv -in deploy/deploy_key.enc -out deploy/deploy_key -d
 install: true
-script: make kool-server
+script:
+  - make kool-server
+  - make rpm-build
 after_success:
   - eval "$(ssh-agent -s)" #start the ssh agent
   - chmod 600 deploy/deploy_key
