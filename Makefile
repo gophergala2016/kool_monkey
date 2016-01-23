@@ -13,7 +13,7 @@ install:
 	@for i in $(DIRS) ; do $(MAKE) -C $$i install ; done
 	@echo "\\033[1;35m+++ System installed\\033[39;0m"
 
-clean:
+clean: stop-environment
 	@$(RM) $(RUN_DIR)
 
 start-environment: postgresql-start
