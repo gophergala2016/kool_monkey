@@ -16,12 +16,12 @@ DESC="Kool monkey server"
 case "$1" in
 	start)
 		echo -n "Starting $DESC: "
-		$DAEMON_PATH/kool-server &
+		su monkey -c "$DAEMON_PATH/kool-server &"
 		sleep 1
 		;;
 	stop)
 		echo -n "Stopping $DESC: "
-		pkill Kool-server
+		su monkey -c "pkill kool-server"
 		;;
 	restart)
 		$0 stop
