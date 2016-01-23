@@ -10,7 +10,9 @@ script:
 - make kool-server
 - make rpm-build
 after_success:
-- eval "$(ssh-agent -s)"
-- chmod 600 deploy/deploy_key
-- ssh-add deploy/deploy_key
 - deploy/deploy.sh
+deploy:
+  provider: script
+  script: deploy/deploy.sh
+  on:
+    branch: master
