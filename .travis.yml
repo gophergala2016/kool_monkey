@@ -4,6 +4,9 @@ install: true
 script: make kool-server
 after_success:
   - eval "$(ssh-agent -s)" #start the ssh agent
-  - chmod 600 .travis/deploy_key
-  - ssh-add .travis/deploy_key
-  - ssh deploy@katdev.no-ip.biz -p26 -o StrictHostKeyChecking=no "cd kool_monkey && git pull 2>&1"
+  - chmod 600 .deploy/deploy_key
+  - ssh-add .deploy/deploy_key
+  - ssh deploy@katdev.no-ip.biz -p26 -o StrictHostKeyChecking=no "pwd"
+  - ssh deploy@katdev.no-ip.biz -p26 -o "mkdir working"
+  - scp -p26 rpm/x86_64/kool-server-* deploy@katdev.no-ip.biz:~/working
+  - ssh deploy@katdev.no-ip.biz -p26 -o "yum install -y ~/working/kool-monkey-* 2>&1"
