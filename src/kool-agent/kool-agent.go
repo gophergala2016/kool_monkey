@@ -58,6 +58,13 @@ func sendResult(server, url string, timeTaken time.Duration) error {
 func main() {
 	fmt.Println("Starting agent!")
 
+	// XXX
+	agent_id := 42
+
+	fmt.Print("Initializing Jobs Poller... ")
+	go jobs_poller(agent_id)
+	fmt.Println("Done!")
+
 	serverURL := "http://localhost:3000"
 	interval := time.Duration(30) * time.Second
 	url := "http://www.segundamano.mx"
