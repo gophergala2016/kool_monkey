@@ -4,6 +4,6 @@ install: true
 script: make kool-server
 after_success:
   - eval "$(ssh-agent -s)" #start the ssh agent
-  - chmod 600 .deploy/deploy_key
-  - ssh-add .deploy/deploy_key
-  - ./deploy.sh
+  - chmod 600 deploy/deploy_key
+  - ssh-add deploy/deploy_key
+  - deploy/deploy.sh
