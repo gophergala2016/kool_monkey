@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -13,7 +13,7 @@ func sendResult(server, url string, timeTaken time.Duration) error {
 
 	resultData := make(map[string]interface{})
 	resultData["url"] = url
-	resultData["time"] = int64(timeTaken / time.Microsecond) //time in microseconds
+	resultData["response_time"] = int64(timeTaken / time.Microsecond) //time in microseconds
 
 	b, _ := json.Marshal(resultData)
 	reader := strings.NewReader(string(b))
@@ -26,11 +26,17 @@ func sendResult(server, url string, timeTaken time.Duration) error {
 		return err
 	}
 
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(res.Body)
-	response := buf.String()
+	if res.StatusCode != 200 {
+		message := make(map[string]string)
+		dec := json.NewDecoder(res.Body)
+		err = dec.Decode(&message)
+		if err != nil {
+			return errors.New("Server didn't correctly save for some reason.")
+		}
+		err := errors.New(fmt.Sprintf("Server said: %s.", message["message"]))
+		return err
+	}
 
-	fmt.Printf("The response from the server was: %s", response)
 	return nil
 }
 
