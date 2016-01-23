@@ -6,7 +6,4 @@ after_success:
   - eval "$(ssh-agent -s)" #start the ssh agent
   - chmod 600 .deploy/deploy_key
   - ssh-add .deploy/deploy_key
-  - ssh -p 26 -o StrictHostKeyChecking=no deploy@katdev.no-ip.biz "pwd"
-  - ssh -p 26 deploy@katdev.no-ip.biz "mkdir ~/working"
-  - scp -P 26 rpm/x86_64/kool-server-* deploy@katdev.no-ip.biz:~/working
-  - ssh -p 26 deploy@katdev.no-ip.biz "sudo yum install -y ~/working/kool-monkey-* 2>&1"
+  - ./deploy.sh
