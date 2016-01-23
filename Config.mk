@@ -3,6 +3,7 @@ genport=$(shell expr ${GENPORTOFF} + \( $(shell id -u) - \( $(shell id -u) / 100
 
 TOPDIR?=$(realpath .)
 PROJECT=$(TOPDIR)
+RPM_DIR=$(TOPDIR)/rpm
 RUN_DIR=$(TOPDIR)/dev-env
 CONF_DIR=$(RUN_DIR)/conf
 LOG_DIR=$(RUN_DIR)/log

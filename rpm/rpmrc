@@ -1,0 +1,5 @@
+macrofiles: /usr/lib/rpm/macros:/usr/lib/rpm/%{_target}/macros:/etc/rpm/macros.specspo:/etc/rpm/macros:/etc/rpm/%{_target}/macros:rpm/rpmmacros
+
+buildarch_compat: i686: noarch
+buildarch_compat: x86_64: noarch
+buildarch_compat: ia32e: noarch x86_64

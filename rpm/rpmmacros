@@ -1,0 +1,15 @@
+%_topdir	.
+%_sourcedir	%{_topdir}
+%_specdir	%{_topdir}/rpm
+%_rpmdir	%{_topdir}/rpm
+%_srcrpmdir	%{_topdir}/rpm
+%_builddir	%{_topdir}
+
+%_prefix /opt/kool_monkey
+%_exec_prefix %{_prefix}
+%_bindir %{_exec_prefix}/bin
+%_sysconfdir %{_prefix}/conf
+%pid_dir %{_localstatedir}/run
+%pid_file %{pid_dir}/kool-server.pid
+%version 0.1
+%release %(git rev-list HEAD --count)

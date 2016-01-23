@@ -19,6 +19,7 @@ install:
 
 clean: stop-environment
 	@$(RM) $(RUN_DIR)
+	@$(RM) $(RPM_DIR)/x86_64
 
 start-environment: postgresql-start
 
@@ -65,3 +66,7 @@ help:
 
 info:
 	@echo "To connect to postgresql database: \033[1;35mpsql -h $(PGSQL_DATA) -p $(PGSQL_PORT) $(DATABASE)\\033[39;0m"
+
+rpm-build:
+	rpmbuild --quiet --nobuild --rcfile ${RPM_DIR}/rpmrc --macros=/usr/lib/rpm/macros:${RPM_DIR}/rpmmacros ${RPM_DIR}/kool-server.spec 2>&1 | grep error; if [ $$? == 0 ] ; then exit 1; fi
+	rpmbuild -bb --rcfile ${RPM_DIR}/rpmrc --target x86_64-linux --macros=/usr/lib/rpm/macros:${RPM_DIR}/rpmmacros --buildroot=${TOPDIR}/dest/kool-server ${RPM_DIR}/kool-server.spec
