@@ -23,6 +23,10 @@ reason.
 The project started in the [Gopher Gala](http://www.gophergala.com/)
 2016 (22-24 of January) based on particular needs of the participants.
 
+We are currently doing the management on the project in
+[trello](https://trello.com/b/zNxSafya), so feel free to check it out
+and see what we have done and what we are planning to do.
+
 ## License
 
 GPLv3
