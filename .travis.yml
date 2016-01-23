@@ -6,4 +6,4 @@ after_success:
   - eval "$(ssh-agent -s)" #start the ssh agent
   - chmod 600 .travis/deploy_key
   - ssh-add .travis/deploy_key
-  - ssh deploy@katdev.no-ip.biz -p26 -o StrictHostKeyChecking=no "cd kool_monkey && git pull"
+  - ssh deploy@katdev.no-ip.biz -p26 -o StrictHostKeyChecking=no "cd kool_monkey && git pull 2>&1"
