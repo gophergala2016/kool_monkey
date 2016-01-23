@@ -2,6 +2,7 @@ GENPORTOFF?=0
 genport=$(shell expr ${GENPORTOFF} + \( $(shell id -u) - \( $(shell id -u) / 100 \) \* 100 \) \* 200 + 20000 + 0${1})
 
 TOPDIR?=$(realpath .)
+
 PROJECT=$(TOPDIR)
 RPM_DIR=$(TOPDIR)/rpm
 RUN_DIR=$(TOPDIR)/dev-env
@@ -27,9 +28,16 @@ PGSQL_PASSWD=
 
 PGSQL_DATA=$(PGSQL_HOST)
 PGSQL_DIR=$(RUN_DIR)/pgsql
-PGSQL_BIN=/usr/lib/postgresql/$(PGSQL_VERSION)/bin
 PGSQL_LOGDIR=$(LOG_DIR)
 PGSQL_LOG=$(PGSQL_LOGDIR)/pgsql.log
 PGSQL_SCHEMA=$(DB_SCRIPTS_DIR)/create_db.sql
+
+ifeq (UNAME),Darwin)
+	PGSQL_BIN=/usr/lib/postgresql/$(PGSQL_VERSION)/bin
+else ifeq (,$(wildcard /etc/redhat-release))
+	PGSQL_BIN=/usr/lib/postgresql/$(PGSQL_VERSION)/bin
+else
+	PGSQL_BIN=/usr/pgsql-$(PGSQL_VERSION)/bin
+endif
 
 export
