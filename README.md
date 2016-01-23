@@ -1,8 +1,6 @@
  Kool Monkey
 =============
 
-## Introduction
-
 Kool Monkey is a distributed monitoring system that collect metrics
 related to a page loading time (time to respond, time to load, the
 waterfall, ...).
