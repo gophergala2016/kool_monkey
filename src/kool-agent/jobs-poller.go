@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func jobs_poller(agent_id int) error {
+func jobs_poller(agent_id int, jobsChan chan string) error {
 	/* This should authenticate AND start polling */
 	polling_interval := 60
 	serverURL := "http://localhost:3000"
@@ -43,6 +43,9 @@ func jobs_poller(agent_id int) error {
 
 		fmt.Printf("The response from the server was: %s",
 			response)
+
+		// XXX Parse the JSON and dont be moron
+		jobsChan <- response
 
 		// XXX we should use a timer with alarms
 		time.Sleep(sleep_interval)
