@@ -1,75 +1,71 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-	"net/http"
-	"strings"
-	"time"
 )
 
-func sendResult(server, url string, timeTaken time.Duration) error {
-
-	resultData := make(map[string]interface{})
-	resultData["url"] = url
-	resultData["response_time"] = int64(timeTaken / time.Microsecond) //time in microseconds
-	resultData["agentId"] = 1
-
-	b, _ := json.Marshal(resultData)
-	reader := strings.NewReader(string(b))
-	request, err := http.NewRequest("POST", fmt.Sprintf("%s/result", server), reader)
-	if err != nil {
-		return err
-	}
-	res, err := http.DefaultClient.Do(request)
-	if err != nil {
-		return err
-	}
-
-	if res.StatusCode != 200 {
-		message := make(map[string]string)
-		dec := json.NewDecoder(res.Body)
-		err = dec.Decode(&message)
-		if err != nil {
-			return errors.New("Server didn't correctly save for some reason.")
-		}
-		err := errors.New(fmt.Sprintf("Server said: %s.", message["message"]))
-		return err
-	}
-
-	return nil
+type Job struct {
+	TestId    int64
+	TargetURL string
+	Frequency int64
+	CtrlChan  chan string
 }
 
-func jobs_orchestrator(jobsChan chan string) error {
+var jobsList map[int64]*Job
+
+func jobs_orchestrator(jobsChan chan []SingleTest) error {
 	// XXX
-	serverURL := "http://localhost:3000"
+	//serverURL := "http://localhost:3000"
 
 	/* Poll the /alive endpoint */
 	for {
-		newJob := <-jobsChan
-		fmt.Println("Got new job: %s", newJob)
+		newJobsList := <-jobsChan
+		fmt.Printf("[Orchestrator] Parsing new Jobs list\n")
+		var activeJobs map[int64]int64 = make(map[int64]int64)
 
 		// Handle a queue of pending Jobs
+		for _, job := range newJobsList {
+			if _, ok := jobsList[job.TestId]; ok {
+				// Existing Job, check if we need to update details
+				oldJob := jobsList[job.TestId]
 
-		// XXX Use real data
-		targetURL := "http://www.segundamano.mx"
-		jobFrequency := 120
+				if job.Frequency != oldJob.Frequency {
+					jobsList[job.TestId].Frequency = job.Frequency
+				}
+				if job.TargetURL != oldJob.TargetURL {
+					jobsList[job.TestId].TargetURL = job.TargetURL
+				}
+			} else {
+				// New Job, add it to the jobs list
+				var newJob Job
+				newJob.TestId = job.TestId
+				newJob.TargetURL = job.TargetURL
+				newJob.Frequency = job.Frequency
 
-		// XXX Use a custom struct
-		jobChan := make(chan time.Duration)
+				newJob.CtrlChan = make(chan string)
 
-		// Poll for results from Jobs
-		go job_runner(targetURL, jobFrequency, jobChan)
+				go job_runner(&newJob)
+			}
+			activeJobs[job.TestId] = 1
+		}
 
-		duration := <-jobChan
+		// If not in the list, kill the relevant goroutine
+		for index, _ := range jobsList {
+			if _, ok := activeJobs[index]; ok {
+			} else {
+				// Kill the goroutine, bye
+			}
+		}
+
+		// Poll the dataChannels
+		//duration := <-jobChan
 
 		// Send results back to the server
-		fmt.Printf("Time taken was: %v.\n", duration)
-		err := sendResult(serverURL, targetURL, duration)
+		//fmt.Printf("Time taken was: %v.\n", duration)
+		//err := sendResult(serverURL, targetURL, duration)
 
-		if err != nil {
-			fmt.Printf("ERROR: Error sending result to server: %s.\n", err)
-		}
+		//if err != nil {
+		//	fmt.Printf("ERROR: Error sending result to server: %s.\n", err)
+		//}
 	}
 }
