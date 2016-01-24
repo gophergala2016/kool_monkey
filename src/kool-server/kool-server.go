@@ -2,7 +2,6 @@ package main
 
 import (
 	"strings"
-	"log"
 	"bytes"
 	"database/sql"
 	"encoding/json"
@@ -26,7 +25,7 @@ type Result struct {
 
 func connectToDb() error {
 	var err error
-	DB, err = sql.Open("postgres", "host=127.0.0.1 port=24810 dbname=monkey user=kool_writer sslmode=disable")
+	DB, err = sql.Open("postgres", "host=127.0.0.1 port=20010 dbname=monkey user=kool_writer sslmode=disable")
 	return err
 }
 
@@ -38,7 +37,6 @@ func hello(w http.ResponseWriter, r *http.Request) {
 }
 
 func result(w http.ResponseWriter, r *http.Request) {
-
 	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
 	message := make(map[string]string)
@@ -81,18 +79,12 @@ func alive(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	// Connect to the database
-	db, err := sql.Open("postgres", "user=kool_writer dbname=monkey port=20010 sslmode=disable")
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	// Insert/update in the database the agent information.
 	ip := strings.Split(r.RemoteAddr,":")[0]
 	response := make(map[string]interface{});
 	_, ok := dat["id"]
 	if ok {
-		_,err := db.Exec("UPDATE agent SET ip = $1, last_alive = now() WHERE id = $2", ip, dat["id"])
+		_,err := DB.Exec("UPDATE agent SET ip = $1, last_alive = now() WHERE id = $2", ip, dat["id"])
 		if err != nil {
 			fmt.Print(err)
 			response["agent_id"] = -1;
@@ -102,12 +94,11 @@ func alive(w http.ResponseWriter, r *http.Request) {
 		} else {
 			response["agent_id"] = dat["id"];
 			response["status"] = "OK";
-			response["message"] = "Couldn't update the agent"
 			w.WriteHeader(http.StatusOK)
 		}
 	} else {
 		var id int
-		err := db.QueryRow("INSERT INTO agent (ip, last_alive) VALUES ($1, now()) RETURNING id", ip).Scan(&id)
+		err := DB.QueryRow("INSERT INTO agent (ip, last_alive) VALUES ($1, now()) RETURNING id", ip).Scan(&id)
 		if err != nil {
 			fmt.Print(err)
 			response["agent_id"] = -1;
