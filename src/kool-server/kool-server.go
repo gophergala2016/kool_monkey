@@ -11,8 +11,8 @@ import (
 	_ "github.com/lib/pq"
 	"net/http"
 	"os"
-	"strings"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -140,6 +140,7 @@ func alive(w http.ResponseWriter, r *http.Request) {
 				job["testId"] = testId
 				job["targetURL"] = targetUrl
 				job["frequency"] = frecuency
+
 				response.Jobs = append(response.Jobs, job)
 			}
 			rows.Close()
@@ -213,18 +214,18 @@ func main() {
 
 	fmt.Println("Starting static dashboard server at port 3002")
 	go func() {
-		panic(http.ListenAndServe(":3002", http.FileServer(http.Dir(koolDir + "/dashboard"))))
+		panic(http.ListenAndServe(":3002", http.FileServer(http.Dir(koolDir+"/dashboard"))))
 	}()
 
 	fmt.Println("Starting static www server at port 3001")
 	go func() {
-		panic(http.ListenAndServe(":3001", http.FileServer(http.Dir(koolDir + "/www"))))
+		panic(http.ListenAndServe(":3001", http.FileServer(http.Dir(koolDir+"/www"))))
 	}()
 
 	fmt.Println("Starting api server at port 3000")
 
 	//Read config
-	cmd_cfg := flag.String("conf", koolDir + "/conf/kool-server.conf", "Config file")
+	cmd_cfg := flag.String("conf", koolDir+"/conf/kool-server.conf", "Config file")
 	flag.Parse()
 	file, err := os.Open(*cmd_cfg)
 	if err != nil {
