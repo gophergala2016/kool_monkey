@@ -11,7 +11,7 @@ import (
 
 func jobs_poller(agent_id int, jobsChan chan string) error {
 	/* This should authenticate AND start polling */
-	polling_interval := 60
+	polling_interval := 30
 	serverURL := "http://localhost:3000"
 	serverMethod := "alive"
 
@@ -22,6 +22,8 @@ func jobs_poller(agent_id int, jobsChan chan string) error {
 	reader := strings.NewReader(string(b))
 
 	sleep_interval := time.Duration(polling_interval) * time.Second
+
+	fmt.Println("Done!")
 
 	/* Poll the /alive endpoint */
 	for {
