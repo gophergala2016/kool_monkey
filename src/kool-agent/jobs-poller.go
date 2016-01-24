@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,7 +8,19 @@ import (
 	"time"
 )
 
-func jobs_poller(agentId int, jobsChan chan string) error {
+type SingleTest struct {
+	TestId    int64  `json:"testId"`
+	TargetURL string `json:"targetURL"`
+	Frequency int64  `json:"frequency"`
+}
+
+type TestList struct {
+	AgentId int64        `json:"agentId"`
+	Status  string       `json:"status"`
+	Jobs    []SingleTest `json:"jobs,omitempty"`
+}
+
+func jobs_poller(agentId int, jobsChan chan TestList) error {
 	/* This should authenticate AND start polling */
 	polling_interval := 30
 	serverURL := "http://localhost:3000"
@@ -39,15 +50,34 @@ func jobs_poller(agentId int, jobsChan chan string) error {
 			fmt.Printf("Could not contact server, %s", err)
 		}
 
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(res.Body)
-		response := buf.String()
+		const jsonData = `{
+				"agentId": 3,
+				"status": "OK",
+				"jobs": [{
+					"testId": 1,
+					"targetURL": "http://www.segundamano.mx",
+					"frecuency": 30
+				}, {
+					"testId": 2,
+					"targetURL": "http://m.segundamano.mx",
+					"frecuency": 45
+				}]
+			}`
 
-		fmt.Printf("The response from the server was: %s",
-			response)
+		dec := json.NewDecoder(res.Body)
+		dec = json.NewDecoder(strings.NewReader(jsonData))
+		var testList TestList
 
-		// XXX Parse the JSON and dont be moron
-		jobsChan <- response
+		err = dec.Decode(&testList)
+		if err != nil {
+			fmt.Printf("Cannot decode JSON: %s", err)
+			continue
+		}
+
+		fmt.Printf("Test List: %s\n",
+			testList)
+
+		jobsChan <- testList
 
 		// XXX we should use a timer with alarms
 		time.Sleep(sleep_interval)

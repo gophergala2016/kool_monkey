@@ -11,7 +11,7 @@ func main() {
 	agentId := 1
 
 	// Set up Channels
-	jobsChannel := make(chan string)
+	jobsChannel := make(chan TestList)
 
 	fmt.Print("Initializing Jobs Orchestrator... ")
 	go jobs_orchestrator(jobsChannel)

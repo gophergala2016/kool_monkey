@@ -41,15 +41,13 @@ func sendResult(server, url string, timeTaken time.Duration) error {
 	return nil
 }
 
-func jobs_orchestrator(jobsChan chan string) error {
+func jobs_orchestrator(jobsChan chan TestList) error {
 	// XXX
 	serverURL := "http://localhost:3000"
 
 	/* Poll the /alive endpoint */
 	for {
-		newJob := <-jobsChan
-		fmt.Println("Got new job: %s", newJob)
-
+		//newJob := <-jobsChan
 		// Handle a queue of pending Jobs
 
 		// XXX Use real data
