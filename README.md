@@ -158,15 +158,19 @@ If you want to set up Kool Monkeys for local development, just clone
 the repo and go through the following steps:
 
 1. Build the project by calling:
+
     `make`
 
 2. Start up the dev environment by calling:
+
     `make start-environment`
 
 3. Start the Kool Monkeys server as follows:
+
     `./bin/kool-server -conf dev-env/conf/kool-server.conf`
 
 4. Start the monitoring agent:
+
     `./bin/kool-agent`
 
 ## Developers
