@@ -2,11 +2,11 @@ ALTER USER kool_writer LOGIN;
 ALTER USER kool_reader LOGIN;
 
 CREATE TABLE result(
-		id SERIAL PRIMARY KEY,
-		agent_id integer NOT NULL REFERENCES agent(id),
+        id SERIAL PRIMARY KEY,
+        agent_id integer NOT NULL REFERENCES agent(id),
         url text NOT NULL,
         response_time bigint NOT NULL,
-		timestamp timestamp NOT NULL DEFAULT now()
+        timestamp timestamp NOT NULL DEFAULT now()
 );
 
 GRANT SELECT,INSERT,DELETE,UPDATE ON result TO kool_writer;
