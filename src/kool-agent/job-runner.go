@@ -75,6 +75,8 @@ func job_runner(job *Job) {
 	for {
 		select {
 		case <-job.CtrlChan:
+			fmt.Printf("[Test %d] Received kill message, shutting down",
+				job.TestId)
 			return
 		default:
 			fmt.Printf("[Test %d] Targeting %s\n", job.TestId, job.TargetURL)

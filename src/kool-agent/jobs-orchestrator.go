@@ -14,9 +14,6 @@ type Job struct {
 var jobsList map[int64]*Job = make(map[int64]*Job)
 
 func jobs_orchestrator(jobsChan chan []SingleTest) error {
-	// XXX
-	//serverURL := "http://localhost:3000"
-
 	/* Poll the /alive endpoint */
 	for {
 		newJobsList := <-jobsChan
@@ -56,21 +53,12 @@ func jobs_orchestrator(jobsChan chan []SingleTest) error {
 
 		// If not in the list, kill the relevant goroutine
 		for index, _ := range jobsList {
-			if _, ok := activeJobs[index]; ok {
-			} else {
-				// Kill the goroutine, bye
+			if _, ok := activeJobs[index]; !ok {
+				fmt.Printf("[Orchestrator] Job ID %d has been disabled, shutting it down\n",
+					index)
+				jobsList[index].CtrlChan <- "die"
+				delete(jobsList, index)
 			}
 		}
-
-		// Poll the dataChannels
-		//duration := <-jobChan
-
-		// Send results back to the server
-		//fmt.Printf("Time taken was: %v.\n", duration)
-		//err := sendResult(serverURL, targetURL, duration)
-
-		//if err != nil {
-		//	fmt.Printf("ERROR: Error sending result to server: %s.\n", err)
-		//}
 	}
 }

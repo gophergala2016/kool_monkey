@@ -73,9 +73,6 @@ func jobs_poller(jobsChan chan []SingleTest) error {
 			continue
 		}
 
-		fmt.Printf("Test List: %s\n",
-			testList)
-
 		jobsChan <- testList.Jobs
 
 		// XXX we should use a timer with alarms
