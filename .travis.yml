@@ -8,6 +8,7 @@ before_install:
 install: true
 script:
 - make kool-server
+- make clean
 - make rpm-build
 after_success:
 - deploy/deploy.sh
