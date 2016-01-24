@@ -104,6 +104,12 @@ and see what we have done and what we are planning to do.
 
 Kool Monkey is distributed under the terms of the GPLv3
 
+## Live Demo
+
+A live demo is availale at the [This URL](http://dashboard.koolmonkey.xyz/).
+It might be unavailable from time to time, and will be updated regularly.
+Also, all the stored data is to be considered volatile.
+
 ## Architecture
 
 This project have three important elements: the agent, the server and
