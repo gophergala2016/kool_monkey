@@ -10,8 +10,7 @@ CONF_DIR=$(RUN_DIR)/conf
 BIN_DIR=$(RUN_DIR)/bin
 LOG_DIR=$(RUN_DIR)/log
 
-SCRIPTS_DIR=$(TOPDIR)/scripts
-DB_SCRIPTS_DIR=$(SCRIPTS_DIR)/db
+SCRIPTS_DIR=$(RUN_DIR)/scripts
 
 USR_BIN=/usr/bin
 USR_SBIN=/usr/sbin
@@ -23,11 +22,15 @@ DATABASE=monkey
 PGSQL_VERSION=$(shell psql -V | awk -F' ' '{ print $$3 }' | awk -F'.' '{ if ($$2 != null) print $$1"."$$2 }')
 
 ifdef PROD_BUILD
+	DB_SCRIPTS_DIR=/opt/kool_monkey/share
+
 	PGSQL_HOST=127.0.0.1
 	PGSQL_PORT=5432
 	PGSQL_USER=postgres
 	PGSQL_PASSWD=
 else
+	DB_SCRIPTS_DIR=$(SCRIPTS_DIR)
+
 	PGSQL_HOST=$(RUN_DIR)/data
 	PGSQL_PORT=$(call genport,10)
 	PGSQL_USER=$(shell id -un)

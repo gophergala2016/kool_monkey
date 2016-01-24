@@ -1,2 +1,2 @@
-\i scripts/db/create_roles.sql
-\i scripts/db/create_schema.sql
+\i %DB_SCRIPTS_DIR%/create_roles.sql
+\i %DB_SCRIPTS_DIR%/create_schema.sql

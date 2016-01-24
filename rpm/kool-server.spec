@@ -31,7 +31,7 @@ mkdir -p %{buildroot}%{_datadir}
 mkdir -p %{buildroot}%{_exec_prefix}/www
 mkdir -p %{buildroot}%{_exec_prefix}/dashboard
 %{__install} -Dp -m 0755 bin/kool-server %{buildroot}%{_bindir}/kool-server
-%{__install} -Dp -m 0644 scripts/db/*.sql %{buildroot}%{_datadir}
+%{__install} -Dp -m 0644 dev-env/scripts/*.sql %{buildroot}%{_datadir}
 %{__install} -Dp -m 0644 front/www/* %{buildroot}%{_exec_prefix}/www
 %{__install} -Dp -m 0644 front/dashboard/* %{buildroot}%{_exec_prefix}/dashboard
 %{__install} -Dp -m 0755 scripts/init/kool-server %{buildroot}%{_sysconfdir}/init.d/kool-server
@@ -44,17 +44,16 @@ mkdir -p %{buildroot}%{_exec_prefix}/dashboard
 
 %preun
 if [ $1 = 0 ]; then
-    # when the preun section is run, we've got stdin attached.  If we
-    # call stop() in the redis init script, it will pass stdin along to
-    # the redis-cli script; this will cause redis-cli to read an extraneous
-    # argument, and the redis-cli shutdown will fail due to the wrong number
-    # of arguments.  So we do this little bit of magic to reconnect stdin
-    # to the terminal
     term="/dev/$(ps -p$$ --no-heading | awk '{print $2}')"
     exec < $term
 
-    /sbin/service kool-server stop > /dev/null 2>&1 || :
+    /sbin/systemctl kool-server stop
     /sbin/chkconfig --del kool-server
+else
+    term="/dev/$(ps -p$$ --no-heading | awk '{print $2}')"
+    exec < $term
+
+    /sbin/systemctl kool-server stop
 fi
 
 %post
@@ -64,13 +63,20 @@ if [ -z `su postgres -c "/usr/bin/psql ${port} -l | grep monkey"` ]; then
 	su postgres -c "/usr/bin/createdb ${port} monkey"
 	su postgres -c "/usr/bin/psql ${port} monkey -f %{_datadir}/create_db.sql"
 else
+	echo "There's a previous monkey database, trying to upgrade it"
 	su postgres -c "/usr/bin/psql ${port} monkey -f %{_datadir}/upgrade_db.sql"
 fi
+/sbin/systemctl daemon-reload
+/sbin/systemctl kool-server start
 
 %postun
 port="-p 5430"
-su postgres -c "/usr/bin/dropdb ${port} --if-exists monkey"
-
+if [ $1 = 0 ]; then
+	su postgres -c "/usr/bin/dropdb ${port} --if-exists monkey"
+else
+	su postgres -c "/usr/bin/psql ${port} monkey -f %{_datadir}/upgrade_db.sql"
+fi
+	
 %clean
 %{__rm} -rf %{buildroot}
 
@@ -88,5 +94,9 @@ su postgres -c "/usr/bin/dropdb ${port} --if-exists monkey"
 %config(noreplace) %{_sysconfdir}/kool-server.conf
 
 %changelog
+* Sun Jan 24 2016 Pablo Alvarez de Sotomayor Posadillo <palvarez@ritho.net> 0.2-0
+- Fix the sql paths to create the database during the installation.
+- Add a build option to generate the configuration for production.
+
 * Sat Jan 23 2016 Pablo Alvarez de Sotomayor Posadillo <palvarez@ritho.net> 0.1-0
 - First version of the rpm package.
