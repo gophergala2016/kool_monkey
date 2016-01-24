@@ -3,19 +3,19 @@
 	text-align: center;
 }
 
-.dash_indicator.dash_blue {
+.dash_indicator.dash_blue, .webix_layout_toolbar.webix_toolbar.tool_blue {
 	background-color: #77F;
 	color: #FFF;
 }
-.dash_indicator.dash_green {
+.dash_indicator.dash_green, .webix_layout_toolbar.webix_toolbar.tool_green {
 	background-color: #3A3;
 	color: #FFF;
 }
-.dash_indicator.dash_orange {
+.dash_indicator.dash_orange, .webix_layout_toolbar.webix_toolbar.tool_orange {
 	background-color: #F90;
 	color: #FFF;
 }
-.dash_indicator.dash_red {
+.dash_indicator.dash_red, .webix_layout_toolbar.webix_toolbar.tool_red {
 	background-color: #F33;
 	color: #FFF;
 }
