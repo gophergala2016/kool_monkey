@@ -119,7 +119,17 @@ func alive(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	fmt.Println("Starting server!")
+	fmt.Println("Starting static dashboard server at port 3002")
+	go func() {
+		panic(http.ListenAndServe(":3002", http.FileServer(http.Dir("/opt/kool_monkey/dashboard"))))
+	}()
+
+	fmt.Println("Starting static www server at port 3001")
+	go func() {
+		panic(http.ListenAndServe(":3001", http.FileServer(http.Dir("/opt/kool_monkey/www"))))
+	}()
+
+	fmt.Println("Starting api server at port 3000")
 
 	err := connectToDb()
 	if err != nil {

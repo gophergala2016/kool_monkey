@@ -27,8 +27,12 @@ provides the server part of Kool monkey.
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_sysconfdir}
 mkdir -p %{buildroot}%{_datadir}
+mkdir -p %{buildroot}%{_exec_prefix}/www
+mkdir -p %{buildroot}%{_exec_prefix}/dashboard
 %{__install} -Dp -m 0755 bin/kool-server %{buildroot}%{_bindir}/kool-server
 %{__install} -Dp -m 0644 scripts/db/*.sql %{buildroot}%{_datadir}
+%{__install} -Dp -m 0644 front/www/* %{buildroot}%{_exec_prefix}/www
+%{__install} -Dp -m 0644 front/dashboard/* %{buildroot}%{_exec_prefix}/dashboard
 %{__install} -Dp -m 0755 scripts/init/kool-server %{buildroot}%{_sysconfdir}/init.d/kool-server
 %{__install} -Dp -m 0755 systemd/kool-server.service %{buildroot}%{_systemddir}/kool-server.service
 %{__install} -Dp -m 0644 conf/kool-server.conf %{buildroot}%{_sysconfdir}/kool-server.conf
@@ -72,6 +76,8 @@ su postgres -c "/usr/bin/dropdb ${port} --if-exists monkey"
 %files
 %defattr(-, root, root, 0755)
 %{_bindir}/kool-server
+%{_exec_prefix}/www
+%{_exec_prefix}/dashboard
 %{_datadir}/create_db.sql
 %{_datadir}/upgrade_db.sql
 %{_datadir}/create_roles.sql
