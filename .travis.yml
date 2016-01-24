@@ -11,7 +11,12 @@ script:
 - make rpm-build
 after_success:
 - deploy/deploy.sh
+before_deploy:
+- eval "$(ssh-agent -s)"
+- chmod 600 deploy/deploy_key
+- ssh-add deploy/deploy_key
 deploy:
+  skip_cleanup: true
   provider: script
   script: deploy/deploy.sh
   on:
