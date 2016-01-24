@@ -34,11 +34,12 @@ func performSingleTest(job *Job) (time.Duration, string, error) {
 	return timeTaken, outputString, nil
 }
 
-func uploadResults(job *Job, testResults string) error {
+func uploadResults(job *Job, testResults string, duration time.Duration) error {
 	// Do something
 	resultData := make(map[string]interface{})
 	resultData["url"] = job.TargetURL
 	resultData["testResults"] = testResults
+	resultData["response_time"] = duration
 	resultData["agentId"] = AgentId
 
 	b, _ := json.Marshal(resultData)
@@ -75,6 +76,8 @@ func job_runner(job *Job) {
 	for {
 		select {
 		case <-job.CtrlChan:
+			fmt.Printf("[Test %d] Received kill message, shutting down",
+				job.TestId)
 			return
 		default:
 			fmt.Printf("[Test %d] Targeting %s\n", job.TestId, job.TargetURL)
@@ -86,7 +89,7 @@ func job_runner(job *Job) {
 			} else {
 				fmt.Printf("[Test %d] Test completed after %v.\n",
 					job.TestId, duration)
-				uploadResults(job, testResults)
+				uploadResults(job, testResults, duration)
 			}
 			time.Sleep(sleepInterval)
 		}

@@ -10,7 +10,7 @@ var ServerURL string = "http://localhost:3000"
 func main() {
 	fmt.Println("Starting agent!")
 
-	// XXX
+	// XXX This needs to be replaced with the value got from the registration
 	AgentId = 1
 
 	// Set up Channels
