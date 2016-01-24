@@ -1,7 +1,6 @@
 package main
 
 import (
-	"strings"
 	"bytes"
 	"database/sql"
 	"encoding/json"
@@ -11,6 +10,7 @@ import (
 	_ "github.com/lib/pq"
 	"net/http"
 	"os"
+	"strings"
 )
 
 var (
@@ -18,9 +18,9 @@ var (
 )
 
 type Result struct {
-	AgentId		 int64	`json:"agent_id"`
-	ResponseTime int64	`json:"response_time"`
-	Url			 string `json:"url"`
+	AgentId      int64  `json:"agentId"`
+	ResponseTime int64  `json:"response_time"`
+	Url          string `json:"url"`
 }
 
 func connectToDb() error {
@@ -80,20 +80,20 @@ func alive(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Insert/update in the database the agent information.
-	ip := strings.Split(r.RemoteAddr,":")[0]
-	response := make(map[string]interface{});
-	_, ok := dat["id"]
+	ip := strings.Split(r.RemoteAddr, ":")[0]
+	response := make(map[string]interface{})
+	_, ok := dat["agentId"]
 	if ok {
-		_,err := DB.Exec("UPDATE agent SET ip = $1, last_alive = now() WHERE id = $2", ip, dat["id"])
+		_, err := DB.Exec("UPDATE agent SET ip = $1, last_alive = now() WHERE id = $2", ip, dat["agentId"])
 		if err != nil {
 			fmt.Print(err)
-			response["agent_id"] = -1;
-			response["status"] = "KO";
+			response["agentId"] = -1
+			response["status"] = "KO"
 			response["message"] = "Couldn't update the agent"
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			response["agent_id"] = dat["id"];
-			response["status"] = "OK";
+			response["agentId"] = dat["agentId"]
+			response["status"] = "OK"
 			w.WriteHeader(http.StatusOK)
 		}
 	} else {
@@ -101,13 +101,13 @@ func alive(w http.ResponseWriter, r *http.Request) {
 		err := DB.QueryRow("INSERT INTO agent (ip, last_alive) VALUES ($1, now()) RETURNING id", ip).Scan(&id)
 		if err != nil {
 			fmt.Print(err)
-			response["agent_id"] = -1;
-			response["status"] = "KO";
+			response["agentId"] = -1
+			response["status"] = "KO"
 			response["message"] = "Couldn't update the agent"
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			response["agent_id"] = id
-			response["status"] = "OK";
+			response["agentId"] = id
+			response["status"] = "OK"
 			w.WriteHeader(http.StatusOK)
 		}
 	}

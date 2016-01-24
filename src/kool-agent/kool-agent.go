@@ -8,7 +8,7 @@ func main() {
 	fmt.Println("Starting agent!")
 
 	// XXX
-	agent_id := 42
+	agentId := 1
 
 	// Set up Channels
 	jobsChannel := make(chan string)
@@ -18,5 +18,5 @@ func main() {
 	fmt.Println("Done!")
 
 	fmt.Print("Initializing Jobs Poller... ")
-	jobs_poller(agent_id, jobsChannel)
+	jobs_poller(agentId, jobsChannel)
 }

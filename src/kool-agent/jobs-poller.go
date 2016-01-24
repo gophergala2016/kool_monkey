@@ -9,17 +9,14 @@ import (
 	"time"
 )
 
-func jobs_poller(agent_id int, jobsChan chan string) error {
+func jobs_poller(agentId int, jobsChan chan string) error {
 	/* This should authenticate AND start polling */
 	polling_interval := 30
 	serverURL := "http://localhost:3000"
 	serverMethod := "alive"
 
 	aliveData := make(map[string]interface{})
-	aliveData["agentId"] = agent_id
-
-	b, _ := json.Marshal(aliveData)
-	reader := strings.NewReader(string(b))
+	aliveData["agentId"] = agentId
 
 	sleep_interval := time.Duration(polling_interval) * time.Second
 
@@ -27,6 +24,9 @@ func jobs_poller(agent_id int, jobsChan chan string) error {
 
 	/* Poll the /alive endpoint */
 	for {
+		b, _ := json.Marshal(aliveData)
+		reader := strings.NewReader(string(b))
+
 		request, err := http.NewRequest("POST",
 			fmt.Sprintf("%s/%s", serverURL, serverMethod),
 			reader)
