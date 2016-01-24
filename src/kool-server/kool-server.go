@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -41,6 +42,12 @@ type AliveResult struct {
 	Status  string                   `json:"status"`
 	Message string                   `json:"message"`
 	Jobs    []map[string]interface{} `json:"jobs"`
+}
+
+type TestSite struct {
+	TestId    int    `json:"test_id"`
+	TargetUrl string `json:"target_url"`
+	Frequency int    `json:"frequency"`
 }
 
 func connectToDb(db DbConnection) error {
@@ -206,6 +213,49 @@ func addSite(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(&response)
 }
 
+func getSites(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	response := make(map[string]interface{})
+
+	testId := 0
+	testIdStr := r.FormValue("test_id")
+	if testIdStr != "" {
+		var err error
+		testId, err = strconv.Atoi(testIdStr)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			response["status"] = "KO"
+			response["message"] = "Invalid test ID"
+			enc.Encode(&response)
+			return
+		}
+	}
+
+	rows, err := DB.Query("SELECT id, targetUrl, frequency FROM test WHERE id = $1 OR $1 = 0", testId)
+	defer rows.Close()
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		response["status"] = "KO"
+		response["message"] = "Couldn't get tests"
+		enc.Encode(&response)
+		return
+	}
+
+	tests := make([]TestSite, 0)
+	for rows.Next() {
+		var testSite TestSite
+		rows.Scan(&testSite.TestId, &testSite.TargetUrl, &testSite.Frequency)
+		tests = append(tests, testSite)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	response["status"] = "OK"
+	response["test_sites"] = tests
+	enc.Encode(&response)
+}
+
 func main() {
 	koolDir, err := filepath.Abs(filepath.Dir(os.Args[0]) + "/../")
 	if err != nil {
@@ -254,6 +304,7 @@ func main() {
 	router.HandleFunc("/result", result).Methods("POST")
 	router.HandleFunc("/alive", alive).Methods("POST")
 	router.HandleFunc("/sites", addSite).Methods("POST")
+	router.HandleFunc("/sites", getSites).Methods("GET")
 
 	n := negroni.Classic()
 	n.UseHandler(router)
