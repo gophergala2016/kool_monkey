@@ -24,10 +24,10 @@ type Result struct {
 }
 
 type AliveResult struct {
-	agentId interface{}                    `json:"agentId"`
-	status  string                         `json:"status"`
-	message string                         `json:"message"`
-	jobs    map[int]map[string]interface{} `json:"jobs"`
+	AgentId interface{}              `json:"agentId"`
+	Status  string                   `json:"status"`
+	Message string                   `json:"message"`
+	Jobs    []map[string]interface{} `json:"jobs"`
 }
 
 func connectToDb() error {
@@ -103,22 +103,30 @@ func alive(w http.ResponseWriter, r *http.Request) {
 	// Prepare and send the response to the agent
 	var response AliveResult
 	if agentOk {
-		response.agentId = id
-		response.status = "OK"
+		response.AgentId = id
+		response.Status = "OK"
 		w.WriteHeader(http.StatusOK)
 
-		rows, errQuery := DB.Query("SELECT test.id AS testId, test.targetURL AS targetURL, test.frequency AS frequency FROM test INNER JOIN testAgent ON test.id = testAgent.idTest WHERE testAgent.idAgent = $1", id)
+		rows, errQuery := DB.Query("SELECT test.id, test.targetURL, test.frequency FROM test INNER JOIN testAgent ON test.id = testAgent.idTest WHERE testAgent.idAgent = $1", id)
 		if errQuery == nil {
 			var testId int
 			var targetUrl string
 			var frecuency int
+		    job := make(map[string]interface{})
 			for i := 0; rows.Next(); i++ {
-				rows.Scan(&testId)
-				rows.Scan(&targetUrl)
-				rows.Scan(&frecuency)
-				response.jobs[i]["testId"] = testId
-				response.jobs[i]["targetURL"] = targetUrl
-				response.jobs[i]["frequency"] = frecuency
+				rows.Scan(&testId, &targetUrl, &frecuency)
+
+				// If Jobs is full it must grow.
+				if i == cap(response.Jobs) {
+					newSlice := make([]map[string]interface{}, len(response.Jobs), 2 * len(response.Jobs) + 1)
+					copy(newSlice, response.Jobs)
+					response.Jobs = newSlice
+				}
+
+				job["testId"] = testId
+				job["targetURL"] = targetUrl
+			    job["frequency"] = frecuency
+				response.Jobs = append(response.Jobs, job)
 			}
 			rows.Close()
 		} else {
@@ -126,9 +134,9 @@ func alive(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		fmt.Print(err)
-		response.agentId = -1
-		response.status = "KO"
-		response.message = "Couldn't update the agent"
+		response.AgentId = -1
+		response.Status = "KO"
+		response.Message = "Couldn't update the agent"
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
