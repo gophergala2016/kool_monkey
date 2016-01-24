@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -16,19 +18,18 @@ var (
 )
 
 type Result struct {
-	AgentId      int64  `json:"agent_id"`
-	ResponseTime int64  `json:"response_time"`
-	Url          string `json:"url"`
+	AgentId		 int64	`json:"agent_id"`
+	ResponseTime int64	`json:"response_time"`
+	Url			 string `json:"url"`
 }
 
 func connectToDb() error {
 	var err error
-	DB, err = sql.Open("postgres", "host=127.0.0.1 port=24810 dbname=monkey user=kool_writer sslmode=disable")
+	DB, err = sql.Open("postgres", "host=127.0.0.1 port=20010 dbname=monkey user=kool_writer sslmode=disable")
 	return err
 }
 
 func hello(w http.ResponseWriter, r *http.Request) {
-
 	enc := json.NewEncoder(w)
 	hello := "Hello World!"
 	w.WriteHeader(http.StatusOK)
@@ -36,7 +37,6 @@ func hello(w http.ResponseWriter, r *http.Request) {
 }
 
 func result(w http.ResponseWriter, r *http.Request) {
-
 	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
 	message := make(map[string]string)
@@ -70,6 +70,54 @@ func result(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(&message)
 }
 
+func alive(w http.ResponseWriter, r *http.Request) {
+	// Read the JSON from the request.
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(r.Body)
+	var dat map[string]interface{}
+	if err := json.Unmarshal(buf.Bytes(), &dat); err != nil {
+		panic(err)
+	}
+
+	// Insert/update in the database the agent information.
+	ip := strings.Split(r.RemoteAddr,":")[0]
+	response := make(map[string]interface{});
+	_, ok := dat["id"]
+	if ok {
+		_,err := DB.Exec("UPDATE agent SET ip = $1, last_alive = now() WHERE id = $2", ip, dat["id"])
+		if err != nil {
+			fmt.Print(err)
+			response["agent_id"] = -1;
+			response["status"] = "KO";
+			response["message"] = "Couldn't update the agent"
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			response["agent_id"] = dat["id"];
+			response["status"] = "OK";
+			w.WriteHeader(http.StatusOK)
+		}
+	} else {
+		var id int
+		err := DB.QueryRow("INSERT INTO agent (ip, last_alive) VALUES ($1, now()) RETURNING id", ip).Scan(&id)
+		if err != nil {
+			fmt.Print(err)
+			response["agent_id"] = -1;
+			response["status"] = "KO";
+			response["message"] = "Couldn't update the agent"
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			response["agent_id"] = id
+			response["status"] = "OK";
+			w.WriteHeader(http.StatusOK)
+		}
+	}
+
+	// Sent the response to the agent
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	enc.Encode(&response)
+}
+
 func main() {
 	fmt.Println("Starting server!")
 
@@ -83,6 +131,7 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/hello", hello).Methods("GET")
 	router.HandleFunc("/result", result).Methods("POST")
+	router.HandleFunc("/alive", alive).Methods("POST")
 
 	n := negroni.Classic()
 	n.UseHandler(router)
