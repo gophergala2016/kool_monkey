@@ -125,20 +125,20 @@ func alive(w http.ResponseWriter, r *http.Request) {
 			var testId int
 			var targetUrl string
 			var frecuency int
-		    job := make(map[string]interface{})
+			job := make(map[string]interface{})
 			for i := 0; rows.Next(); i++ {
 				rows.Scan(&testId, &targetUrl, &frecuency)
 
 				// If Jobs is full it must grow.
 				if i == cap(response.Jobs) {
-					newSlice := make([]map[string]interface{}, len(response.Jobs), 2 * len(response.Jobs) + 1)
+					newSlice := make([]map[string]interface{}, len(response.Jobs), 2*len(response.Jobs)+1)
 					copy(newSlice, response.Jobs)
 					response.Jobs = newSlice
 				}
 
 				job["testId"] = testId
 				job["targetURL"] = targetUrl
-			    job["frequency"] = frecuency
+				job["frequency"] = frecuency
 				response.Jobs = append(response.Jobs, job)
 			}
 			rows.Close()
@@ -155,6 +155,52 @@ func alive(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
+	enc.Encode(&response)
+}
+
+func addSite(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	response := make(map[string]interface{})
+
+	var okUrl, okFreq bool
+	var targetUrl string
+	var frequency float64
+	var testId int
+
+	dec := json.NewDecoder(r.Body)
+	siteTest := make(map[string]interface{})
+	err := dec.Decode(&siteTest)
+	if err == nil {
+		targetUrl, okUrl = siteTest["targetUrl"].(string)
+		frequency, okFreq = siteTest["frequency"].(float64)
+	}
+	if err != nil || !okUrl || !okFreq {
+		w.WriteHeader(http.StatusBadRequest)
+		response["status"] = "KO"
+		response["message"] = "Invalid JSON"
+		enc.Encode(&response)
+		return
+	}
+
+	err = DB.QueryRow(
+		"INSERT INTO test (targetUrl, frequency) VALUES ($1, $2) RETURNING id",
+		targetUrl,
+		int(frequency),
+	).Scan(&testId)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		response["status"] = "KO"
+		response["message"] = "Couldn't save test"
+		enc.Encode(&response)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	response["status"] = "OK"
+	response["message"] = "Correctly saved"
+	response["testId"] = testId
 	enc.Encode(&response)
 }
 
@@ -200,6 +246,7 @@ func main() {
 	router.HandleFunc("/hello", hello).Methods("GET")
 	router.HandleFunc("/result", result).Methods("POST")
 	router.HandleFunc("/alive", alive).Methods("POST")
+	router.HandleFunc("/sites", addSite).Methods("POST")
 
 	n := negroni.Classic()
 	n.UseHandler(router)
