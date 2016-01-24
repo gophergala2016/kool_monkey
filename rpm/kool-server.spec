@@ -30,6 +30,7 @@ mkdir -p %{buildroot}%{_datadir}
 %{__install} -Dp -m 0755 bin/kool-server %{buildroot}%{_bindir}/kool-server
 %{__install} -Dp -m 0644 scripts/db/*.sql %{buildroot}%{_datadir}
 %{__install} -Dp -m 0755 scripts/init/kool-server %{buildroot}%{_sysconfdir}/init.d/kool-server
+%{__install} -Dp -m 0755 systemd/kool-server.service %{buildroot}%{_systemddir}/kool-server.service
 %{__install} -Dp -m 0644 conf/kool-server.conf %{buildroot}%{_sysconfdir}/kool-server.conf
 %{__install} -p -d -m 0755 %{buildroot}%{pid_dir}
 
@@ -62,6 +63,7 @@ else
 fi
 
 %postun
+port="-p 5430"
 su postgres -c "/usr/bin/dropdb ${port} --if-exists monkey"
 
 %clean
@@ -75,8 +77,8 @@ su postgres -c "/usr/bin/dropdb ${port} --if-exists monkey"
 %{_datadir}/create_roles.sql
 %{_datadir}/create_schema.sql
 %{_sysconfdir}/init.d/kool-server
+%{_systemddir}/kool-server.service
 %config(noreplace) %{_sysconfdir}/kool-server.conf
-%dir %attr(0755,redis,redis) %{_localstatedir}/run
 
 %changelog
 * Sat Jan 23 2016 Pablo Alvarez de Sotomayor Posadillo <palvarez@ritho.net> 0.1-0
