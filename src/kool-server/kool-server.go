@@ -35,6 +35,13 @@ type Result struct {
 	Url          string `json:"url"`
 }
 
+type AliveResult struct {
+	AgentId interface{}              `json:"agentId"`
+	Status  string                   `json:"status"`
+	Message string                   `json:"message"`
+	Jobs    []map[string]interface{} `json:"jobs"`
+}
+
 func connectToDb(db DbConnection) error {
 	var err error
 	connStr := fmt.Sprintf("host=%s port=%d dbname=%s user=%s sslmode=disable", db.Host, db.Port, db.Name, db.User)
@@ -84,48 +91,68 @@ func result(w http.ResponseWriter, r *http.Request) {
 }
 
 func alive(w http.ResponseWriter, r *http.Request) {
+	var agentOk bool
+	var err error
+
 	// Read the JSON from the request.
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(r.Body)
 	var dat map[string]interface{}
-	if err := json.Unmarshal(buf.Bytes(), &dat); err != nil {
+	if err = json.Unmarshal(buf.Bytes(), &dat); err != nil {
 		panic(err)
 	}
 
 	// Insert/update in the database the agent information.
 	ip := strings.Split(r.RemoteAddr, ":")[0]
-	response := make(map[string]interface{})
-	_, ok := dat["agentId"]
+	id, ok := dat["agentId"]
 	if ok {
-		_, err := DB.Exec("UPDATE agent SET ip = $1, last_alive = now() WHERE id = $2", ip, dat["agentId"])
-		if err != nil {
-			fmt.Print(err)
-			response["agentId"] = -1
-			response["status"] = "KO"
-			response["message"] = "Couldn't update the agent"
-			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			response["agentId"] = dat["agentId"]
-			response["status"] = "OK"
-			w.WriteHeader(http.StatusOK)
-		}
+		_, err = DB.Exec("UPDATE agent SET ip = $1, last_alive = now() WHERE id = $2", ip, dat["agentId"])
+		agentOk = (err == nil)
 	} else {
-		var id int
-		err := DB.QueryRow("INSERT INTO agent (ip, last_alive) VALUES ($1, now()) RETURNING id", ip).Scan(&id)
-		if err != nil {
-			fmt.Print(err)
-			response["agentId"] = -1
-			response["status"] = "KO"
-			response["message"] = "Couldn't update the agent"
-			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			response["agentId"] = id
-			response["status"] = "OK"
-			w.WriteHeader(http.StatusOK)
-		}
+		err = DB.QueryRow("INSERT INTO agent (ip, last_alive) VALUES ($1, now()) RETURNING id", ip).Scan(&id)
+		agentOk = (err == nil)
 	}
 
-	// Sent the response to the agent
+	// Prepare and send the response to the agent
+	var response AliveResult
+	if agentOk {
+		response.AgentId = id
+		response.Status = "OK"
+		w.WriteHeader(http.StatusOK)
+
+		rows, errQuery := DB.Query("SELECT test.id, test.targetURL, test.frequency FROM test INNER JOIN testAgent ON test.id = testAgent.idTest WHERE testAgent.idAgent = $1", id)
+		if errQuery == nil {
+			var testId int
+			var targetUrl string
+			var frecuency int
+		    job := make(map[string]interface{})
+			for i := 0; rows.Next(); i++ {
+				rows.Scan(&testId, &targetUrl, &frecuency)
+
+				// If Jobs is full it must grow.
+				if i == cap(response.Jobs) {
+					newSlice := make([]map[string]interface{}, len(response.Jobs), 2 * len(response.Jobs) + 1)
+					copy(newSlice, response.Jobs)
+					response.Jobs = newSlice
+				}
+
+				job["testId"] = testId
+				job["targetURL"] = targetUrl
+			    job["frequency"] = frecuency
+				response.Jobs = append(response.Jobs, job)
+			}
+			rows.Close()
+		} else {
+			fmt.Print(errQuery)
+		}
+	} else {
+		fmt.Print(err)
+		response.AgentId = -1
+		response.Status = "KO"
+		response.Message = "Couldn't update the agent"
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
 	enc.Encode(&response)
