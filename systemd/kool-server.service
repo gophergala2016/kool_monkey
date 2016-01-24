@@ -10,7 +10,7 @@ Type=simple
 User=monkey
 Group=monkey
 
-ExecStart=/opt/kool_monkey/bin/kool-server -config=/opt/kool_monkey/conf/kool-server.conf &
+ExecStart=/opt/kool_monkey/bin/kool-server -conf=/opt/kool_monkey/conf/kool-server.conf &
 
 ExecStop=pkill kool-server
 
