@@ -1,31 +1,31 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"net/http"
-	"strings"
+	"os/exec"
 	"time"
 )
 
-func urlTimeTest(url string) (time.Duration, error) {
+func performSingleTest(url string) (time.Duration, string, error) {
 
 	var timeTaken time.Duration
 
-	reader := strings.NewReader("")
-	request, err := http.NewRequest("GET", url, reader)
-	if err != nil {
-		return timeTaken, err
-	}
-
 	t0 := time.Now()
-	_, err = http.DefaultClient.Do(request)
+	cmd := exec.Command("phantomjs", "scripts/phantomjs/netsniff.js", url)
+	cmdOutput := &bytes.Buffer{}
+	cmd.Stdout = cmdOutput
+	err := cmd.Run()
 	t1 := time.Now()
+
+	outputString := cmdOutput.String()
+
 	if err != nil {
-		return timeTaken, err
+		return timeTaken, outputString, err
 	}
 
 	timeTaken = t1.Sub(t0)
-	return timeTaken, nil
+	return timeTaken, outputString, nil
 }
 
 func job_runner(targetUrl string, frequency int, resultChan chan time.Duration) {
@@ -33,7 +33,9 @@ func job_runner(targetUrl string, frequency int, resultChan chan time.Duration) 
 
 	for {
 		fmt.Println("Running test against %s!", targetUrl)
-		timeTaken, err := urlTimeTest(targetUrl)
+		timeTaken, testResults, err := performSingleTest(targetUrl)
+
+		fmt.Printf("%s", testResults)
 
 		if err != nil {
 			fmt.Printf("ERROR: Error with time test: %s.\n", err)
