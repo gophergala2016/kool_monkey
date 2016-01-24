@@ -1,2 +1,2 @@
-CREATE ROLE kool_writer;
-CREATE ROLE kool_reader;
+CREATE ROLE kool_writer LOGIN;
+CREATE ROLE kool_reader LOGIN;
