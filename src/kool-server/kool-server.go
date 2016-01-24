@@ -95,28 +95,34 @@ func alive(w http.ResponseWriter, r *http.Request) {
 		_,err := db.Exec("UPDATE agent SET ip = $1, last_alive = now() WHERE id = $2", ip, dat["id"])
 		if err != nil {
 			fmt.Print(err)
-			response["id"] = -1;
+			response["agent_id"] = -1;
 			response["status"] = "KO";
+			response["message"] = "Couldn't update the agent"
+			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			response["id"] = dat["id"];
+			response["agent_id"] = dat["id"];
 			response["status"] = "OK";
+			response["message"] = "Couldn't update the agent"
+			w.WriteHeader(http.StatusOK)
 		}
 	} else {
 		var id int
 		err := db.QueryRow("INSERT INTO agent (ip, last_alive) VALUES ($1, now()) RETURNING id", ip).Scan(&id)
 		if err != nil {
 			fmt.Print(err)
-			response["id"] = -1;
+			response["agent_id"] = -1;
 			response["status"] = "KO";
+			response["message"] = "Couldn't update the agent"
+			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			response["id"] = id
+			response["agent_id"] = id
 			response["status"] = "OK";
+			w.WriteHeader(http.StatusOK)
 		}
 	}
 
 	// Sent the response to the agent
 	enc := json.NewEncoder(w)
-	w.WriteHeader(http.StatusOK)
 	enc.Encode(&response)
 }
 
