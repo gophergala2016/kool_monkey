@@ -14,6 +14,7 @@ func sendResult(server, url string, timeTaken time.Duration) error {
 	resultData := make(map[string]interface{})
 	resultData["url"] = url
 	resultData["response_time"] = int64(timeTaken / time.Microsecond) //time in microseconds
+	resultData["agent_id"] = 1
 
 	b, _ := json.Marshal(resultData)
 	reader := strings.NewReader(string(b))
