@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -216,7 +217,21 @@ func getSites(w http.ResponseWriter, r *http.Request) {
 	enc := json.NewEncoder(w)
 	response := make(map[string]interface{})
 
-	rows, err := DB.Query("SELECT id, targetUrl, frequency FROM test")
+	testId := 0
+	testIdStr := r.FormValue("test_id")
+	if testIdStr != "" {
+		var err error
+		testId, err = strconv.Atoi(testIdStr)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			response["status"] = "KO"
+			response["message"] = "Invalid test ID"
+			enc.Encode(&response)
+			return
+		}
+	}
+
+	rows, err := DB.Query("SELECT id, targetUrl, frequency FROM test WHERE id = $1 OR $1 = 0", testId)
 	defer rows.Close()
 
 	if err != nil {
