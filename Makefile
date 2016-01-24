@@ -2,7 +2,7 @@ TOPDIR?=$(realpath .)
 
 include $(TOPDIR)/Config.mk
 
-DIRS=conf
+DIRS=conf scripts
 BIN=kool-server kool-agent
 GODEPS=\
 	github.com/lib/pq \
