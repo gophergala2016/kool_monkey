@@ -147,6 +147,7 @@ func alive(w http.ResponseWriter, r *http.Request) {
 				job["testId"] = testId
 				job["targetURL"] = targetUrl
 				job["frequency"] = frecuency
+
 				response.Jobs = append(response.Jobs, job)
 			}
 			rows.Close()
