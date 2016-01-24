@@ -4,6 +4,7 @@ include $(TOPDIR)/Config.mk
 DIRS  = 
 SRCS  = postgresql.conf
 SRCS += pg_hba.conf
+SRCS += kool-server.conf
 
 install:
 	@echo "\\033[1;35m+++ Installing conf\\033[39;0m"

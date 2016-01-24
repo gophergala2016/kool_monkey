@@ -20,7 +20,8 @@ Kool monkey is a distributed system to monitor webpages. This package
 provides the server part of Kool monkey.
 
 %build
-%{__make} kool-server
+PROD_BUILD=1 %{__make} kool-server
+PROD_BUILD=1 %{__make} install
 
 %install
 %{__rm} -rf %{buildroot}
@@ -35,7 +36,7 @@ mkdir -p %{buildroot}%{_exec_prefix}/dashboard
 %{__install} -Dp -m 0644 front/dashboard/* %{buildroot}%{_exec_prefix}/dashboard
 %{__install} -Dp -m 0755 scripts/init/kool-server %{buildroot}%{_sysconfdir}/init.d/kool-server
 %{__install} -Dp -m 0755 systemd/kool-server.service %{buildroot}%{_systemddir}/kool-server.service
-%{__install} -Dp -m 0644 conf/kool-server.conf %{buildroot}%{_sysconfdir}/kool-server.conf
+%{__install} -Dp -m 0644 dev-env/conf/kool-server.conf %{buildroot}%{_sysconfdir}/kool-server.conf
 %{__install} -p -d -m 0755 %{buildroot}%{pid_dir}
 
 %pre
