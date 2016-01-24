@@ -47,18 +47,17 @@ if [ $1 = 0 ]; then
     term="/dev/$(ps -p$$ --no-heading | awk '{print $2}')"
     exec < $term
 
-    /sbin/systemctl kool-server stop
-    /sbin/chkconfig --del kool-server
+    /bin/systemctl stop kool-server.service
+    /bin/systemctl disable kool-server.service
 else
     term="/dev/$(ps -p$$ --no-heading | awk '{print $2}')"
     exec < $term
 
-    /sbin/systemctl kool-server stop
+    /bin/systemctl stop kool-server.service
 fi
 
 %post
 port="-p 5430"
-/sbin/chkconfig --add kool-server
 if [ -z `su postgres -c "/usr/bin/psql ${port} -l | grep monkey"` ]; then
 	su postgres -c "/usr/bin/createdb ${port} monkey"
 	su postgres -c "/usr/bin/psql ${port} monkey -f %{_datadir}/create_db.sql"
@@ -66,8 +65,9 @@ else
 	echo "There's a previous monkey database, trying to upgrade it"
 	su postgres -c "/usr/bin/psql ${port} monkey -f %{_datadir}/upgrade_db.sql"
 fi
-/sbin/systemctl daemon-reload
-/sbin/systemctl kool-server start
+/bin/systemctl daemon-reload
+/bin/systemctl enable kool-server.service
+/bin/systemctl start kool-server
 
 %postun
 port="-p 5430"
