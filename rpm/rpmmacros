@@ -10,6 +10,7 @@
 %_bindir %{_exec_prefix}/bin
 %_sysconfdir %{_prefix}/conf
 %_datadir %{_prefix}/share
+%_systemddir /usr/lib/systemd/system
 %pid_dir %{_localstatedir}/run
 %pid_file %{pid_dir}/kool-server.pid
 %version 0.1
