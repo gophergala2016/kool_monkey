@@ -49,24 +49,9 @@ func jobs_poller(jobsChan chan []SingleTest) error {
 			fmt.Printf("Could not contact server, %s", err)
 		}
 
-		const jsonData = `{
-				"agentId": 3,
-				"status": "OK",
-				"jobs": [{
-					"testId": 1,
-					"targetURL": "http://www.segundamano.mx",
-					"frequency": 30
-				}, {
-					"testId": 2,
-					"targetURL": "http://www.segundamano.mx/li",
-					"frequency": 45
-				}]
-			}`
-
 		dec := json.NewDecoder(res.Body)
-		dec = json.NewDecoder(strings.NewReader(jsonData))
-		var testList TestList
 
+		var testList TestList
 		err = dec.Decode(&testList)
 		if err != nil {
 			fmt.Printf("Cannot decode JSON: %s", err)

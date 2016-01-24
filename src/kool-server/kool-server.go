@@ -133,8 +133,8 @@ func alive(w http.ResponseWriter, r *http.Request) {
 			var testId int
 			var targetUrl string
 			var frecuency int
-			job := make(map[string]interface{})
 			for i := 0; rows.Next(); i++ {
+				job := make(map[string]interface{})
 				rows.Scan(&testId, &targetUrl, &frecuency)
 
 				// If Jobs is full it must grow.
