@@ -20,14 +20,13 @@ type TestList struct {
 	Jobs    []SingleTest `json:"jobs,omitempty"`
 }
 
-func jobs_poller(agentId int, jobsChan chan TestList) error {
+func jobs_poller(jobsChan chan []SingleTest) error {
 	/* This should authenticate AND start polling */
 	polling_interval := 30
-	serverURL := "http://localhost:3000"
 	serverMethod := "alive"
 
 	aliveData := make(map[string]interface{})
-	aliveData["agentId"] = agentId
+	aliveData["agentId"] = AgentId
 
 	sleep_interval := time.Duration(polling_interval) * time.Second
 
@@ -39,7 +38,7 @@ func jobs_poller(agentId int, jobsChan chan TestList) error {
 		reader := strings.NewReader(string(b))
 
 		request, err := http.NewRequest("POST",
-			fmt.Sprintf("%s/%s", serverURL, serverMethod),
+			fmt.Sprintf("%s/%s", ServerURL, serverMethod),
 			reader)
 
 		if err != nil {
@@ -56,11 +55,11 @@ func jobs_poller(agentId int, jobsChan chan TestList) error {
 				"jobs": [{
 					"testId": 1,
 					"targetURL": "http://www.segundamano.mx",
-					"frecuency": 30
+					"frequency": 30
 				}, {
 					"testId": 2,
-					"targetURL": "http://m.segundamano.mx",
-					"frecuency": 45
+					"targetURL": "http://www.segundamano.mx/li",
+					"frequency": 45
 				}]
 			}`
 
@@ -77,7 +76,7 @@ func jobs_poller(agentId int, jobsChan chan TestList) error {
 		fmt.Printf("Test List: %s\n",
 			testList)
 
-		jobsChan <- testList
+		jobsChan <- testList.Jobs
 
 		// XXX we should use a timer with alarms
 		time.Sleep(sleep_interval)
