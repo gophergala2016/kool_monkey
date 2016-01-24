@@ -268,7 +268,21 @@ func getAgents(w http.ResponseWriter, r *http.Request) {
 	enc := json.NewEncoder(w)
 	response := make(map[string]interface{})
 
-	rows, err := DB.Query("SELECT id, ip, last_alive FROM agent")
+	agentId := 0
+	agentIdStr := r.FormValue("agent_id")
+	if agentIdStr != "" {
+		var err error
+		agentId, err = strconv.Atoi(agentIdStr)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			response["status"] = "KO"
+			response["message"] = "Invalid agent ID"
+			enc.Encode(&response)
+			return
+		}
+	}
+
+	rows, err := DB.Query("SELECT id, ip, last_alive FROM agent WHERE id = $1 OR $1 = 0", agentId)
 	defer rows.Close()
 
 	if err != nil {
