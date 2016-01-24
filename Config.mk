@@ -33,11 +33,11 @@ PGSQL_LOG=$(PGSQL_LOGDIR)/pgsql.log
 PGSQL_SCHEMA=$(DB_SCRIPTS_DIR)/create_db.sql
 
 ifeq (UNAME),Darwin)
-	PGSQL_BIN=/usr/lib/postgresql/$(PGSQL_VERSION)/bin
+	PGSQL_BIN?=/usr/lib/postgresql/$(PGSQL_VERSION)/bin
 else ifeq (,$(wildcard /etc/redhat-release))
-	PGSQL_BIN=/usr/lib/postgresql/$(PGSQL_VERSION)/bin
+	PGSQL_BIN?=/usr/lib/postgresql/$(PGSQL_VERSION)/bin
 else
-	PGSQL_BIN=/usr/pgsql-$(PGSQL_VERSION)/bin
+	PGSQL_BIN?=/usr/pgsql-$(PGSQL_VERSION)/bin
 endif
 
 export
