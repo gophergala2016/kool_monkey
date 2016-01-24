@@ -23,6 +23,13 @@ type Result struct {
 	Url          string `json:"url"`
 }
 
+type AliveResult struct {
+	agentId interface{}                    `json:"agentId"`
+	status  string                         `json:"status"`
+	message string                         `json:"message"`
+	jobs    map[int]map[string]interface{} `json:"jobs"`
+}
+
 func connectToDb() error {
 	var err error
 	DB, err = sql.Open("postgres", "host=127.0.0.1 port=20010 dbname=monkey user=kool_writer sslmode=disable")
@@ -84,7 +91,6 @@ func alive(w http.ResponseWriter, r *http.Request) {
 
 	// Insert/update in the database the agent information.
 	ip := strings.Split(r.RemoteAddr, ":")[0]
-	response := make(map[string]interface{})
 	id, ok := dat["agentId"]
 	if ok {
 		_, err = DB.Exec("UPDATE agent SET ip = $1, last_alive = now() WHERE id = $2", ip, dat["agentId"])
@@ -94,20 +100,38 @@ func alive(w http.ResponseWriter, r *http.Request) {
 		agentOk = (err == nil)
 	}
 
+	// Prepare and send the response to the agent
+	var response AliveResult
 	if agentOk {
-		response["agentId"] = id
-		response["status"] = "OK"
+		response.agentId = id
+		response.status = "OK"
 		w.WriteHeader(http.StatusOK)
+
+		rows, errQuery := DB.Query("SELECT test.id AS testId, test.targetURL AS targetURL, test.frequency AS frequency FROM test INNER JOIN testAgent ON test.id = testAgent.idTest WHERE testAgent.idAgent = $1", id)
+		if errQuery == nil {
+			var testId int
+			var targetUrl string
+			var frecuency int
+			for i := 0; rows.Next(); i++ {
+				rows.Scan(&testId)
+				rows.Scan(&targetUrl)
+				rows.Scan(&frecuency)
+				response.jobs[i]["testId"] = testId
+				response.jobs[i]["targetURL"] = targetUrl
+				response.jobs[i]["frequency"] = frecuency
+			}
+			rows.Close()
+		} else {
+			fmt.Print(errQuery)
+		}
 	} else {
 		fmt.Print(err)
-		response["agentId"] = -1
-		response["status"] = "KO"
-		response["message"] = "Couldn't update the agent"
+		response.agentId = -1
+		response.status = "KO"
+		response.message = "Couldn't update the agent"
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	// testId, targetURL, frequency
-	// Sent the response to the agent
 	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
 	enc.Encode(&response)
