@@ -4,13 +4,13 @@ Version: %{version}
 Release: %{release}
 License: GPLv3
 Group: Applications/Multimedia
-Requires: postgresql
+Requires: postgresql94
 URL: https://github.com/gophergala2016/kool_monkey
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 # Should work in centos, but it's not working in debian :(
 #BuildRequires: golang
-Requires(post): /sbin/chkconfig /usr/sbin/useradd /etc/init.d/postgresql
+Requires(post): /sbin/chkconfig /usr/sbin/useradd
 Requires(preun): /sbin/chkconfig, /sbin/service
 Requires(postun): /sbin/service
 Provides: kool-server
@@ -52,16 +52,17 @@ if [ $1 = 0 ]; then
 fi
 
 %post
+port="-p 5430"
 /sbin/chkconfig --add kool-server
-if [ -z `su postgres -c "/usr/bin/psql -l | grep monkey"` ]; then
-	su postgres -c "/usr/bin/createdb monkey"
-	su postgres -c "/usr/bin/psql monkey -f %{_datadir}/create_db.sql"
+if [ -z `su postgres -c "/usr/bin/psql ${port} -l | grep monkey"` ]; then
+	su postgres -c "/usr/bin/createdb ${port} monkey"
+	su postgres -c "/usr/bin/psql ${port} monkey -f %{_datadir}/create_db.sql"
 else
-	su postgres -c "/usr/bin/psql monkey -f %{_datadir}/upgrade_db.sql"
+	su postgres -c "/usr/bin/psql ${port} monkey -f %{_datadir}/upgrade_db.sql"
 fi
 
 %postun
-su postgres -c "/usr/bin/dropdb --if-exists monkey"
+su postgres -c "/usr/bin/dropdb ${port} --if-exists monkey"
 
 %clean
 %{__rm} -rf %{buildroot}
