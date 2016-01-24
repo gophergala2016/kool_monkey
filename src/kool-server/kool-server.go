@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
@@ -17,15 +18,27 @@ var (
 	DB *sql.DB
 )
 
+type Configuration struct {
+	DbConn DbConnection
+}
+
+type DbConnection struct {
+	Host string
+	Port int
+	Name string
+	User string
+}
+
 type Result struct {
 	AgentId      int64  `json:"agentId"`
 	ResponseTime int64  `json:"response_time"`
 	Url          string `json:"url"`
 }
 
-func connectToDb() error {
+func connectToDb(db DbConnection) error {
 	var err error
-	DB, err = sql.Open("postgres", "host=127.0.0.1 port=20010 dbname=monkey user=kool_writer sslmode=disable")
+	connStr := fmt.Sprintf("host=%s port=%d dbname=%s user=%s sslmode=disable", db.Host, db.Port, db.Name, db.User)
+	DB, err = sql.Open("postgres", connStr)
 	return err
 }
 
@@ -131,7 +144,25 @@ func main() {
 
 	fmt.Println("Starting api server at port 3000")
 
-	err := connectToDb()
+	//Read config
+	cmd_cfg := flag.String("conf", "/opt/kool-server/kool-server.conf", "Config file")
+	flag.Parse()
+	file, err := os.Open(*cmd_cfg)
+	if err != nil {
+		fmt.Printf("Config - File Error: %s\n", err)
+		os.Exit(1)
+	}
+
+	decoder := json.NewDecoder(file)
+	conf := Configuration{}
+
+	if err := decoder.Decode(&conf); err != nil {
+		fmt.Printf("Config - Decoding Error: %s\n", err)
+		os.Exit(1)
+	}
+
+	//Connect to DB
+	err = connectToDb(conf.DbConn)
 	if err != nil {
 		fmt.Println("Couldn't connect to DB!")
 		os.Exit(1)
