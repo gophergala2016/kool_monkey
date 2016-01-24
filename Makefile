@@ -3,6 +3,7 @@ TOPDIR?=$(realpath .)
 include $(TOPDIR)/Config.mk
 
 DIRS=conf
+BIN=kool-server kool-agent
 GODEPS=\
 	github.com/lib/pq \
 	github.com/gorilla/mux \
@@ -12,9 +13,13 @@ all:
 	@$(MAKE) kool-server
 	@$(MAKE) start-environment
 
-install:
+install: $(BIN)
 	@echo "\\033[1;35m+++ Installing system\\033[39;0m"
 	@for i in $(DIRS) ; do $(MAKE) -C $$i install ; done
+	@mkdir -p $(BIN_DIR)
+	@for i in $(BIN); do \
+		cp bin/$$i $(BIN_DIR); \
+	done
 	@echo "\\033[1;35m+++ System installed\\033[39;0m"
 
 clean: stop-environment

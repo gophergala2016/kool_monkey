@@ -7,6 +7,7 @@ PROJECT=$(TOPDIR)
 RPM_DIR=$(TOPDIR)/rpm
 RUN_DIR=$(TOPDIR)/dev-env
 CONF_DIR=$(RUN_DIR)/conf
+BIN_DIR=$(RUN_DIR)/bin
 LOG_DIR=$(RUN_DIR)/log
 
 SCRIPTS_DIR=$(TOPDIR)/scripts
