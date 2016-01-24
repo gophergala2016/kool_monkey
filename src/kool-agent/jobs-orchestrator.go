@@ -11,7 +11,7 @@ type Job struct {
 	CtrlChan  chan string
 }
 
-var jobsList map[int64]*Job
+var jobsList map[int64]*Job = make(map[int64]*Job)
 
 func jobs_orchestrator(jobsChan chan []SingleTest) error {
 	// XXX
@@ -27,6 +27,8 @@ func jobs_orchestrator(jobsChan chan []SingleTest) error {
 		for _, job := range newJobsList {
 			if _, ok := jobsList[job.TestId]; ok {
 				// Existing Job, check if we need to update details
+				fmt.Printf("[Orchestrator] Job ID %d already set up, checking for changes\n",
+					job.TestId)
 				oldJob := jobsList[job.TestId]
 
 				if job.Frequency != oldJob.Frequency {
@@ -36,6 +38,8 @@ func jobs_orchestrator(jobsChan chan []SingleTest) error {
 					jobsList[job.TestId].TargetURL = job.TargetURL
 				}
 			} else {
+				fmt.Printf("[Orchestrator] Got a new Job with ID %d creating a new process\n",
+					job.TestId)
 				// New Job, add it to the jobs list
 				var newJob Job
 				newJob.TestId = job.TestId
@@ -44,6 +48,7 @@ func jobs_orchestrator(jobsChan chan []SingleTest) error {
 
 				newJob.CtrlChan = make(chan string)
 
+				jobsList[job.TestId] = &newJob
 				go job_runner(&newJob)
 			}
 			activeJobs[job.TestId] = 1
