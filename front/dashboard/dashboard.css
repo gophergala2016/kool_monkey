@@ -1,0 +1,43 @@
+.menu_button button{
+	padding:0;
+	text-align: center;
+}
+
+.dash_indicator.dash_blue {
+	background-color: #77F;
+	color: #FFF;
+}
+.dash_indicator.dash_green {
+	background-color: #3A3;
+	color: #FFF;
+}
+.dash_indicator.dash_orange {
+	background-color: #F90;
+	color: #FFF;
+}
+.dash_indicator.dash_red {
+	background-color: #F33;
+	color: #FFF;
+}
+.dash_indicator .icon {
+	font-size: 90px;
+	width: 30%;
+	text-align: center;
+	float: left;
+	padding-top: 10px;
+	color: #FFF;
+	opacity: 0.6;
+}
+
+.dash_indicator .number {
+	text-align: right;
+	font-size: 45px;
+	padding-right: 10px;
+	line-height: 1.6em;
+}
+
+.dash_indicator .title {
+	text-align: right;
+	font-size: 20px;
+	padding-right: 10px;
+}
