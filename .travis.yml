@@ -1,21 +1,25 @@
 language: go
+
 addons:
   apt:
     packages:
     - rpm
+
 before_install:
 - openssl aes-256-cbc -K $encrypted_a939b7674977_key -iv $encrypted_a939b7674977_iv -in deploy/deploy_key.enc -out deploy/deploy_key -d
+
 install: true
+
 script:
 - make kool-server
 - make clean
 - make rpm-build
-after_success:
-- deploy/deploy.sh
+
 before_deploy:
 - eval "$(ssh-agent -s)"
 - chmod 600 deploy/deploy_key
 - ssh-add deploy/deploy_key
+
 deploy:
   skip_cleanup: true
   provider: script
