@@ -71,47 +71,42 @@ func result(w http.ResponseWriter, r *http.Request) {
 }
 
 func alive(w http.ResponseWriter, r *http.Request) {
+	var agentOk bool
+	var err error
+
 	// Read the JSON from the request.
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(r.Body)
 	var dat map[string]interface{}
-	if err := json.Unmarshal(buf.Bytes(), &dat); err != nil {
+	if err = json.Unmarshal(buf.Bytes(), &dat); err != nil {
 		panic(err)
 	}
 
 	// Insert/update in the database the agent information.
 	ip := strings.Split(r.RemoteAddr, ":")[0]
 	response := make(map[string]interface{})
-	_, ok := dat["agentId"]
+	id, ok := dat["agentId"]
 	if ok {
-		_, err := DB.Exec("UPDATE agent SET ip = $1, last_alive = now() WHERE id = $2", ip, dat["agentId"])
-		if err != nil {
-			fmt.Print(err)
-			response["agentId"] = -1
-			response["status"] = "KO"
-			response["message"] = "Couldn't update the agent"
-			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			response["agentId"] = dat["agentId"]
-			response["status"] = "OK"
-			w.WriteHeader(http.StatusOK)
-		}
+		_, err = DB.Exec("UPDATE agent SET ip = $1, last_alive = now() WHERE id = $2", ip, dat["agentId"])
+		agentOk = (err == nil)
 	} else {
-		var id int
-		err := DB.QueryRow("INSERT INTO agent (ip, last_alive) VALUES ($1, now()) RETURNING id", ip).Scan(&id)
-		if err != nil {
-			fmt.Print(err)
-			response["agentId"] = -1
-			response["status"] = "KO"
-			response["message"] = "Couldn't update the agent"
-			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			response["agentId"] = id
-			response["status"] = "OK"
-			w.WriteHeader(http.StatusOK)
-		}
+		err = DB.QueryRow("INSERT INTO agent (ip, last_alive) VALUES ($1, now()) RETURNING id", ip).Scan(&id)
+		agentOk = (err == nil)
 	}
 
+	if agentOk {
+		response["agentId"] = id
+		response["status"] = "OK"
+		w.WriteHeader(http.StatusOK)
+	} else {
+		fmt.Print(err)
+		response["agentId"] = -1
+		response["status"] = "KO"
+		response["message"] = "Couldn't update the agent"
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	// testId, targetURL, frequency
 	// Sent the response to the agent
 	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
