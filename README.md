@@ -144,6 +144,31 @@ quite easy to build and deploy the project.
 
 The current status of travis is [![Build Status](https://travis-ci.org/gophergala2016/kool_monkey.svg?branch=master)](https://travis-ci.org/gophergala2016/kool_monkey) 
 
+### Dependencies
+
+In order to build and run the project you will require the following:
+
+* Go compiler (tested with Go 1.5)
+* PostgreSQL (tested with PostgreSQL 9.4)
+* PhantomJS (tested with PhantomJS 1.9.7)
+
+### Starting up a local environment
+
+If you want to set up Kool Monkeys for local development, just clone
+the repo and go through the following steps:
+
+1. Build the project by calling:
+    `make`
+
+2. Start up the dev environment by calling:
+    `make start-environment`
+
+3. Start the Kool Monkeys server as follows:
+    `./bin/kool-server -conf dev-env/conf/kool-server.conf`
+
+4. Start the monitoring agent:
+    `./bin/kool-agent`
+
 ## Developers
 
 The main developers (and maintainers) of the project are:
