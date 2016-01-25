@@ -98,7 +98,7 @@ func result(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err = DB.Exec(
-		"INSERT INTO result (agent_id, test_id, url, response_time) VALUES ($1, $2, $3)",
+		"INSERT INTO result (agent_id, test_id, url, response_time) VALUES ($1, $2, $3, $4)",
 		resultData.AgentId,
 		resultData.TestId,
 		resultData.Url,
