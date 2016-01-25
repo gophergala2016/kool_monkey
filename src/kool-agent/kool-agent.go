@@ -5,7 +5,7 @@ import (
 )
 
 var AgentId int64 = -1
-var ServerURL string = "http://localhost:3000"
+var ServerURL string = "http://api.koolmonkey.xyz"
 
 func main() {
 	fmt.Println("Starting agent!")
