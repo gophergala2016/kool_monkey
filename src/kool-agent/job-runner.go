@@ -37,6 +37,7 @@ func performSingleTest(job *Job) (time.Duration, string, error) {
 func uploadResults(job *Job, testResults string, duration time.Duration) error {
 	// Do something
 	resultData := make(map[string]interface{})
+	resultData["testId"] = job.TestId
 	resultData["url"] = job.TargetURL
 	resultData["testResults"] = testResults
 	resultData["response_time"] = duration
