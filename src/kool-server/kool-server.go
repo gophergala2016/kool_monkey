@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -48,6 +49,12 @@ type TestSite struct {
 	TestId    int    `json:"test_id"`
 	TargetUrl string `json:"target_url"`
 	Frequency int    `json:"frequency"`
+}
+
+type Agent struct {
+	AgentId   int       `json:"agent_id"`
+	Ip        string    `json:"ip"`
+	LastAlive time.Time `json:"last_alive"`
 }
 
 func connectToDb(db DbConnection) error {
@@ -256,6 +263,49 @@ func getSites(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(&response)
 }
 
+func getAgents(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	response := make(map[string]interface{})
+
+	agentId := 0
+	agentIdStr := r.FormValue("agent_id")
+	if agentIdStr != "" {
+		var err error
+		agentId, err = strconv.Atoi(agentIdStr)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			response["status"] = "KO"
+			response["message"] = "Invalid agent ID"
+			enc.Encode(&response)
+			return
+		}
+	}
+
+	rows, err := DB.Query("SELECT id, ip, last_alive FROM agent WHERE id = $1 OR $1 = 0", agentId)
+	defer rows.Close()
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		response["status"] = "KO"
+		response["message"] = "Couldn't get agents"
+		enc.Encode(&response)
+		return
+	}
+
+	agents := make([]Agent, 0)
+	for rows.Next() {
+		var a Agent
+		rows.Scan(&a.AgentId, &a.Ip, &a.LastAlive)
+		agents = append(agents, a)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	response["status"] = "OK"
+	response["agents"] = agents
+	enc.Encode(&response)
+}
+
 func main() {
 	koolDir, err := filepath.Abs(filepath.Dir(os.Args[0]) + "/../")
 	if err != nil {
@@ -305,6 +355,7 @@ func main() {
 	router.HandleFunc("/alive", alive).Methods("POST")
 	router.HandleFunc("/sites", addSite).Methods("POST")
 	router.HandleFunc("/sites", getSites).Methods("GET")
+	router.HandleFunc("/agents", getAgents).Methods("GET")
 
 	n := negroni.Classic()
 	n.UseHandler(router)
