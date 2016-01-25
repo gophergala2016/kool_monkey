@@ -26,7 +26,7 @@ clean: stop-environment
 	@$(RM) $(RUN_DIR)
 	@$(RM) $(RPM_DIR)/x86_64
 
-start-environment: postgresql-start
+start-environment: install postgresql-start
 
 stop-environment: postgresql-stop
 
