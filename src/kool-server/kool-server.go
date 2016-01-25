@@ -33,10 +33,15 @@ type DbConnection struct {
 }
 
 type Result struct {
-	AgentId		 int64	`json:"agentId"`
-	TestId		 int64	`json:"testId"`
-	ResponseTime int64	`json:"response_time"`
-	Url			 string `json:"url"`
+	AgentId      int64  `json:"agentId"`
+	TestId       int64  `json:"testId"`
+	ResponseTime int64  `json:"response_time"`
+	Url          string `json:"url"`
+}
+
+type TestCount struct {
+	Hour  int `json:"hour"`
+	Count int `json:"count"`
 }
 
 type AliveResult struct {
@@ -47,8 +52,8 @@ type AliveResult struct {
 }
 
 type queryResult struct {
-    TestId interface{}              `json:"testId"`
-    Result []map[string]interface{} `json:"results"`
+	TestId interface{}              `json:"testId"`
+	Result []map[string]interface{} `json:"results"`
 }
 
 type TestSite struct {
@@ -114,7 +119,7 @@ func result(w http.ResponseWriter, r *http.Request) {
 
 func query(w http.ResponseWriter, r *http.Request) {
 	fmtDate := make([]time.Time, 2)
-    vars := mux.Vars(r)
+	vars := mux.Vars(r)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -137,40 +142,40 @@ func query(w http.ResponseWriter, r *http.Request) {
 	// Checking the date format
 	if dateFrom != "" && fmtDate[0].Unix() == -62135596800 {
 		enc.Encode(&response)
-	    fmt.Println("dateFrom: Format error")
+		fmt.Println("dateFrom: Format error")
 		return
 	} else if dateTo != "" && fmtDate[1].Unix() == -62135596800 {
 		enc.Encode(&response)
-	    fmt.Println("dateTo: Format error")
+		fmt.Println("dateTo: Format error")
 		return
 	}
 
 	// Checking that dateFrom <= dateTo
-	extraQuery := "";
+	extraQuery := ""
 	if dateFrom != "" && dateTo != "" && fmtDate[0].Unix() > fmtDate[1].Unix() {
 		enc.Encode(&response)
-	    fmt.Println("dateFom is more recent than dateTo")
+		fmt.Println("dateFom is more recent than dateTo")
 		return
 	} else if dateFrom != "" && dateTo != "" {
 		const timestamp = "2014-01-22 12:22:30"
 		extraQuery = fmt.Sprintf(" AND timestamp BETWEEN '%s' AND '%s'", fmtDate[0].Format(timestamp), fmtDate[1].Format(timestamp))
 	}
 
-	rows, errQuery := DB.Query("SELECT id, agent_id, url, response_time, timestamp FROM result WHERE test_id = $1" + extraQuery, vars["testId"])
+	rows, errQuery := DB.Query("SELECT id, agent_id, url, response_time, timestamp FROM result WHERE test_id = $1"+extraQuery, vars["testId"])
 	if errQuery == nil {
-        var id int
-        var agentId int
-        var url string
-        var responseTime int
-        var timestamp string
+		var id int
+		var agentId int
+		var url string
+		var responseTime int
+		var timestamp string
 
 		for i := 0; rows.Next(); i++ {
 			result := make(map[string]interface{})
 			rows.Scan(&id, &agentId, &url, &responseTime, &timestamp)
 
-		    result["id"] = id
+			result["id"] = id
 			result["agentId"] = agentId
-		    result["url"] = url
+			result["url"] = url
 			result["responseTime"] = responseTime
 			result["timestamp"] = timestamp
 
@@ -392,6 +397,37 @@ func getAgents(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(&response)
 }
 
+func getTestsPerHour(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	response := make(map[string]interface{})
+
+	date := r.FormValue("date")
+
+	rows, err := DB.Query("select date_part('hour', timestamp) as hour, count(*) as count from result where date_trunc('day', timestamp) = $1::timestamp group by date_part('hour', timestamp) order by date_part('hour', timestamp)", date)
+	defer rows.Close()
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		response["status"] = "KO"
+		response["message"] = "Couldn't get test count"
+		enc.Encode(&response)
+		return
+	}
+
+	tests := make([]TestCount, 0)
+	for rows.Next() {
+		var tc TestCount
+		rows.Scan(&tc.Hour, &tc.Count)
+		tests = append(tests, tc)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	response["status"] = "OK"
+	response["tests"] = tests
+	enc.Encode(&response)
+}
+
 func main() {
 	koolDir, err := filepath.Abs(filepath.Dir(os.Args[0]) + "/../")
 	if err != nil {
@@ -443,6 +479,7 @@ func main() {
 	router.HandleFunc("/sites", getSites).Methods("GET")
 	router.HandleFunc("/agents", getAgents).Methods("GET")
 	router.HandleFunc("/query/{testId}", query).Methods("GET")
+	router.HandleFunc("/tests", getTestsPerHour).Methods("GET")
 
 	n := negroni.Classic()
 	n.UseHandler(router)
