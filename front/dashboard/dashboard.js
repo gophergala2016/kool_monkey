@@ -94,7 +94,6 @@ var dashboard_pages = {
 					cols: [
 						{
 							height: 120,
-							url: "asdasd",
 							css: "dash_indicator dash_green",
 							template: "<div title='Tests prefomed today so far'>"
 								+ "<div class='webix_icon icon fa-check-square-o'></div>"
@@ -104,7 +103,6 @@ var dashboard_pages = {
 						},
 						{
 							height: 120,
-							url: "asdasd",
 							css: "dash_indicator dash_red",
 							template: "<div title='Connected Agents'>"
 								+ "<div class='webix_icon icon fa-user-secret'></div>"
@@ -114,7 +112,6 @@ var dashboard_pages = {
 						},
 						{
 							height: 120,
-							url: "asdasd",
 							css: "dash_indicator dash_blue",
 							template: "<div title='Locations available to test from'>"
 								+ "<div class='webix_icon icon fa-globe'></div>"
@@ -123,12 +120,12 @@ var dashboard_pages = {
 								+ "</div>"
 						},
 						{
+							id: "dash_indicator_sites",
 							height: 120,
-							url: "asdasd",
 							css: "dash_indicator dash_orange",
 							template: "<div title='Sites being currently monitored'>"
 								+ "<div class='webix_icon icon fa-desktop'></div>"
-								+ "<div class='number'>19</div>"
+								+ "<div class='number'>#count#</div>"
 								+ "<div class='title'>Sites</div>"
 								+ "</div>"
 						},
@@ -254,8 +251,7 @@ var dashboard_pages = {
 									id: "dash_general_sites_list",
 									height: 280,
 									select: true,
-									template: "<div class='webix_icon icon fa-desktop'></div>&nbsp;#site#",
-									data: datasets.sites_monitored
+									template: "<div class='webix_icon icon fa-desktop'></div>&nbsp;[#test_id# #frequency#s] #target_url#"
 								}
 							]
 						}
@@ -294,7 +290,90 @@ var dashboard_pages = {
 					});
 				}
 				map.fitBounds(bounds);
-			});
+			});			
+		},
+		intervals: {
+			sites: setInterval(function () {
+				if(!$$("dash_general_sites_list")) return false;
+				webix.ajax().get("/api/sites", function(text, data, xmlHttp) {
+					data = data.json();
+					if(data.status == "OK") {
+						$$("dash_general_sites_list").clearAll();
+						$$("dash_general_sites_list").parse(data.test_sites);
+						if($$("dash_indicator_sites")) {
+							$$("dash_indicator_sites").parse({count: data.test_sites.length});
+						}
+					}
+				});
+
+			},5000)
+		}
+	},
+
+	dash_sites: {
+		title: "Sites Dashboard",
+		body: {
+			view: "layout",
+			type: "space",
+			rows: [
+				{
+					view: "form",
+					elements: [
+						{
+							view:"combo", 
+							label: 'Site',
+							placeholder: "Select a site",
+							options:["http://segundamano.mx", "http://dashboard.koolmonkey.xyz"]
+						}
+					]
+				},
+				{
+					view: "layout",
+					type: "space",
+					cols: [
+						{
+							view: "layout",
+							type: "line",
+							rows: [
+								{
+									view: "toolbar",
+									height: 40,
+									css: "tool_green",
+									cols: [
+										{ view: "label", label: "<div class='webix_icon icon fa-check-square-o'></div>&nbsp;Tests by Site"}
+									]
+								},
+								{
+									view: "chart",
+									type: "area",
+									value: "#tests#",
+									height: 380,
+									color: "#3A3",
+									alpha: 0.8,
+									xAxis: {
+										template: "#hour#",
+										title: "Time"
+									},
+									yAxis: {
+										start: 0,
+										title: "Tests",
+										template: function(obj){
+											return (obj%10?"":obj)
+										}
+									},
+									tooltip: {
+										template: "#tests# tests performed within the #hour# hours"
+									},
+									data: datasets.tests_along_day
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		intervals: {
+
 		}
 	},
 
