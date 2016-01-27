@@ -41,11 +41,11 @@ func uploadResults(job *Job, testResults string, duration time.Duration) error {
 	resultData["url"] = job.TargetURL
 	resultData["testResults"] = testResults
 	resultData["response_time"] = duration
-	resultData["agentId"] = AgentId
+	resultData["agentId"] = Conf.AgentId
 
 	b, _ := json.Marshal(resultData)
 	reader := strings.NewReader(string(b))
-	request, err := http.NewRequest("POST", fmt.Sprintf("%s/result", ServerURL), reader)
+	request, err := http.NewRequest("POST", fmt.Sprintf("%s/result", Conf.ServerURL), reader)
 	if err != nil {
 		return err
 	}
