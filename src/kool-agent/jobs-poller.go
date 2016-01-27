@@ -26,7 +26,7 @@ func jobs_poller(jobsChan chan []SingleTest) error {
 	serverMethod := "alive"
 
 	aliveData := make(map[string]interface{})
-	aliveData["agentId"] = AgentId
+	aliveData["agentId"] = Conf.AgentId
 
 	sleep_interval := time.Duration(polling_interval) * time.Second
 
@@ -38,7 +38,7 @@ func jobs_poller(jobsChan chan []SingleTest) error {
 		reader := strings.NewReader(string(b))
 
 		request, err := http.NewRequest("POST",
-			fmt.Sprintf("%s/%s", ServerURL, serverMethod),
+			fmt.Sprintf("%s/%s", Conf.ServerURL, serverMethod),
 			reader)
 
 		if err != nil {
