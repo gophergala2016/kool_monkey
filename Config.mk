@@ -16,6 +16,7 @@ USR_BIN=/usr/bin
 USR_SBIN=/usr/sbin
 RM=rm -fr
 MKDIR=mkdir -p
+CP=cp -fr
 
 DATABASE=monkey
 

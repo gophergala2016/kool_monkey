@@ -18,7 +18,7 @@ install: $(BIN)
 	@for i in $(DIRS) ; do $(MAKE) -C $$i install ; done
 	@mkdir -p $(BIN_DIR)
 	@for i in $(BIN); do \
-		cp bin/$$i $(BIN_DIR); \
+		$(CP) bin/$$i $(BIN_DIR); \
 	done
 	@echo "\\033[1;35m+++ System installed\\033[39;0m"
 
